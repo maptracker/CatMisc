@@ -1,0 +1,12 @@
+*~
+*#
+.#*
+\#*#
+
+.RData
+.Rhistory
+.Rproj.user
+*.Rcheck
+
+ForkedRows-*
+.nfs*
