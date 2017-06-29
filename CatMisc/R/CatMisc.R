@@ -144,9 +144,22 @@ is.def <- function(x) {
 #' @export
 
 is.something <- function(x) {
-    is.def(x) &&
-    ( length(x) > 1 ||
-      (is.character(x) && x != "") | (is.numeric(x) && x != 0) )
+    if (!is.def(x) || length(x) == 0) {
+        ## Not defined or length zero? false
+        FALSE
+    } else if (length(x) > 1) {
+        ## More than one thing? Always true
+        TRUE
+    } else if (is.numeric(x)) {
+        ## Single number, 0 = false
+        if (x == 0) { FALSE } else { TRUE }
+    } else if (is.character(x)) {
+        ## Single string, "" = false
+        if (x == "") { FALSE } else { TRUE }
+    } else {
+        ## Fallback, just 'test' it. Will fail for some stuff
+        if (x) { TRUE } else { FALSE }
+    }
 }
 
 #' Parenthetical Regular Expression
