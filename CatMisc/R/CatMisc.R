@@ -156,9 +156,10 @@ is.something <- function(x) {
     } else if (is.character(x)) {
         ## Single string, "" = false
         if (x == "") { FALSE } else { TRUE }
+    } else if (is.logical(x)) {
+        x
     } else {
-        ## Fallback, just 'test' it. Will fail for some stuff
-        if (x) { TRUE } else { FALSE }
+        TRUE # I guess? Will expand conditions as weirdness occurs...
     }
 }
 
@@ -201,7 +202,7 @@ is.something <- function(x) {
 #'
 #' @export
 
-parenRegExp <- function(RegExp, text, ignore.case = TRUE, unlist = TRUE) {
+parenRegExp <- function(RegExp, text, ignore.case=TRUE, unlist=TRUE) {
     ## Taken from the Examples section of ?gregexpr
     m <- lapply(regmatches(text, gregexpr(RegExp, text, perl = TRUE,
                                           ignore.case = ignore.case)),
@@ -250,11 +251,46 @@ parenRegExp <- function(RegExp, text, ignore.case = TRUE, unlist = TRUE) {
 #'
 #' @export
 
-textBlockToVector <- function (x, split="[\n\r]+", trim.white=TRUE,
+textBlockToVector <- function (x, split="[\n\r]", trim.white=TRUE,
                                skip.empty=TRUE) {
     rv <- unlist(strsplit(x, split))
     if (trim.white) rv <- gsub('(^\\s+|\\s+$)', '', rv)
     if (skip.empty) rv <- rv[ rv != "" ]
     rv
+}
+
+#' Flexible Filehandle
+#'
+#' Utility method to transparently handle 'normal' and compressed files
+#'
+#' @param file Required, the path to the file to read
+#'
+#' @return A list with filehandle, basename, suffix and gzip flag
+#'
+#' @export
+
+.flexFilehandle <- function (file) {
+    if (!file.exists(file)) return ( NA )
+    name <- basename(file)
+    isGz <- CatMisc::parenRegExp("(.+)\\.gz$", name)
+    fh <- if (is.na(isGz[1])) {
+        ## 'normal' file
+        isGz <- FALSE
+        file(file, open = "r")
+    } else {
+        ## gzipped file
+        name <- isGz[1]
+        isGz <- TRUE
+        gzfile(file, open = "r")
+    }
+    hasSfx <- CatMisc::parenRegExp("(.+)\\.([^\\.]+)$", name)
+    sfx <- if (is.na(hasSfx[1])) {
+        ## No apparent suffix?
+        ""
+    } else {
+        name <- hasSfx[1]
+        hasSfx[2]
+    }
+    list(fh=fh, name=name, sfx=sfx, gz=isGz)
 }
 

@@ -1,7 +1,7 @@
 Package: CatMisc
 Title: Collection of miscellaneous utility methods
-Version: 0.2
-Date: 2017-06-29
+Version: 0.4
+Date: 2017-07-13
 Authors@R: person("Charles", "Tilford", email = "cran@agent.fastmail.com", role = c("aut", "cre"))
 Author: Charles Tilford [aut, cre]
 Maintainer: Charles Tilford <cran@agent.fastmail.com>
@@ -12,3 +12,4 @@ License: GPL-2
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.1
+Suggests: testthat

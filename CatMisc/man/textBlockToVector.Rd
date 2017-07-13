@@ -4,7 +4,7 @@
 \alias{textBlockToVector}
 \title{Text Block to Vector}
 \usage{
-textBlockToVector(x, split = "[\\n\\r]+", trim.white = TRUE,
+textBlockToVector(x, split = "[\\n\\r]", trim.white = TRUE,
   skip.empty = TRUE)
 }
 \arguments{
