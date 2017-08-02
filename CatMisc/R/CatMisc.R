@@ -1,3 +1,32 @@
+#' CAT Miscellaneous Functions
+#'
+#' A collection of utility methods frequently used in packages by
+#' Charles Tilford (CAT)
+#'
+#' @name CatMisc
+#'
+#' @details
+#'
+#' \itemize{
+#' 
+#'   \item is.empty.field - Test for empty RefClass fields
+#'
+#'   \item is.def - Tests a scalar against a variety of "nothing" values
+#'
+#'   \item is.something - Tests if object is defined, and not zero, "" or FALSE
+#'
+#'   \item parenRegExp - Simplifies capture from regular expression parentheses
+#'
+#'   \item textBlockToVector - Splits a block of text into lines
+#'
+#'   \item .flexFilehandle - Automatically handles .gz files
+#'
+#'   \item methodHelp - Used inside RefClass methods for "self-help"
+#' }
+#' 
+#' 
+NULL
+
 #' Is Empty Field
 #'
 #' Tests for ReferenceClass fields that have not been set.
@@ -266,13 +295,13 @@ textBlockToVector <- function (x, split="[\n\r]", trim.white=TRUE,
 #' @param file Required, the path to the file to read
 #'
 #' @return A list with filehandle, basename, suffix and gzip flag
-#'
+#' 
 #' @export
 
 .flexFilehandle <- function (file) {
     if (!file.exists(file)) return ( NA )
     name <- basename(file)
-    isGz <- CatMisc::parenRegExp("(.+)\\.gz$", name)
+    isGz <- parenRegExp("(.+)\\.gz$", name)
     fh <- if (is.na(isGz[1])) {
         ## 'normal' file
         isGz <- FALSE
@@ -283,7 +312,7 @@ textBlockToVector <- function (x, split="[\n\r]", trim.white=TRUE,
         isGz <- TRUE
         gzfile(file, open = "r")
     }
-    hasSfx <- CatMisc::parenRegExp("(.+)\\.([^\\.]+)$", name)
+    hasSfx <- parenRegExp("(.+)\\.([^\\.]+)$", name)
     sfx <- if (is.na(hasSfx[1])) {
         ## No apparent suffix?
         ""
@@ -294,3 +323,189 @@ textBlockToVector <- function (x, split="[\n\r]", trim.white=TRUE,
     list(fh=fh, name=name, sfx=sfx, gz=isGz)
 }
 
+#' Example Reference Class Object
+#'
+#' A tiny object that multiplies things
+#'
+#' @details
+#'
+#' This is a toy ReferenceClass (aka 'R5') object used to illustrate the
+#' \link{methodHelp} function's use in documenting object methods
+#'
+#' @field x A numeric value
+#'
+#' @examples
+#'
+#' # Help at the class level
+#' myRefClassThing( help=TRUE )
+#'
+#' x <- myRefClassThing( x=17 )
+#' # Help at the method level
+#' x$thingProduct( help=TRUE )
+#' 
+#' 
+#' @importFrom methods new setRefClass
+#' @export myRefClassThing
+#' @exportClass myRefClassThing
+
+myRefClassThing <- 
+    setRefClass("myRefClassThing", fields=list(x="numeric"))
+
+myRefClassThing$methods(
+
+    ## In most cases, a generic methodHelp() can be made as:
+
+    ## methodHelp(match.call(),
+    ##            class(.self),
+    ##            names(.refClassDef@contains))
+
+    ## However, to make this toy example work without working up a
+    ## full package for 'myRefClassThing', we are manually including
+    ## 'CatMisc' instead, to allow the help topic to be found. The
+    ## method call is also being manually set for initialize
+    ## (otherwise it would be 'initialize', which would be recognized
+    ## as a constructor and converted to 'CatMisc')
+    
+    initialize = function( x=3, help=FALSE ) {
+        if (help) {
+            methodHelp('myRefClassThing', 'CatMisc',
+                       names(.refClassDef@contains))
+            message("(an incomplete object will be unavoidably generated and can be ignored)")
+            return(invisible(NA))
+        }
+        x <<- x
+    },
+    thingProduct = function( y=7, help=FALSE ) {
+        "Multiplies the x field by parameter y"
+        if (help) return( methodHelp(match.call(), 'CatMisc',
+                                     names(.refClassDef@contains)) )
+                                        # Actual function code follows:
+        message("Multiplying ",x," by ",y," ...")
+        x * y
+    }
+)
+
+#' Thing Product
+#'
+#' A toy object method used to illustrate \link{methodHelp}
+#'
+#' @name thingProduct
+#'
+#' @details Multiplies the internally-stored value of x by a supplied
+#'     second number.
+#' 
+#' @param y The second number
+#'
+#' @return A numeric product of x * y
+#'
+#' @examples
+#'
+#' mrct <- myRefClassThing(5)
+#' mrct$thingProduct(11)
+#' 
+NULL
+
+
+#' Method Help
+#'
+#' Mechanism to identify relevant help topics from calling context
+#'
+#' @details
+#'
+#' This function is part of an attempt to better document
+#' ReferenceClass objects, here focusing on method documentation. The
+#' function is designed to be called generically from within a method;
+#' See Examples for a fleshed-out illustration. This allows richer
+#' documentation to be maintained in Roxygen, and allows objects to be
+#' self-documenting if the user passes a help=TRUE flag, eg:
+#'
+#' \preformatted{
+#'  myRefClass$methods(
+#'    cube = function( x, help=FALSE ) {
+#'        if (help) return( methodHelp(match.call(), class(.self),
+#'                                     names(.refClassDef@contains)) )
+#'        x ^ 3
+#'    })
+#' }
+#'
+#' @param mc Required, the result of match.call, called just before
+#'     entering this function. This should allow automatic
+#'     determination of the method name, as well as the variable name
+#'     holding the object
+#' @param cl Required, the class() of the object
+#' @param inh The inherited packages, taken from .refClassDef@contains
+#'
+#' @return The mysterious 'help_files_with_topic' object R uses for
+#'     managing internal help (which will be rendered if not
+#'     captured), or NA if no topic could be found
+#'
+#' @examples
+#' 
+#' mrct <- myRefClassThing(5)
+#' 
+#' # General information on the class as a whole:
+#' ?myRefClassThing
+#'
+#' # Specific information on the $thingProduct() function
+#' mrct$thingProduct( help=TRUE )
+#' 
+#' @importFrom utils help
+#' @export
+
+methodHelp <- function( mc, cl, inh ) {
+    mc <- as.character(mc)
+    if (!is.something(mc)) {
+        warning("methodHelp(): No calling code was provided, can not determine method name")
+        return( invisible(NA) )
+    }
+    vm       <- parenRegExp('^(\\S+)\\$([a-z0-9_.]+)', mc[1])
+    if (is.na(vm[1])) {
+        if (grepl('^[a-z0-9_.]+$', mc[1], ignore.case=TRUE)) {
+            ## Looks like just a method name
+            vm <- c("myObject", mc[1])
+        } else {
+            warning("Failed to parse method name from calling code: ", mc[1])
+            return( invisible(NA) )
+        }
+    }
+    varName  <- vm[1]
+    methName <- vm[2]
+    
+    ## See if we can find a help topic named after the method in:
+    ##   The main class
+    ##   or: Any of the inherited classes
+    ##   or: Any of the remaining classes
+    ## I *think* that's the right precidence to pursue?
+    allCls <- c(cl[1], inh, cl[-1])
+    ## Remove the generic RefClass methods
+    allCls <- setdiff(allCls, c("envRefClass", ".environment", "refClass",
+                                "environment", "refObject"))
+    ## Presume that $initialize() is the constructor method for the
+    ## class, and look for the class documentation instead:
+    if (methName == "initialize") methName <- cl[1]
+    
+    ## message("The method is '", methName, "' using variable '", varName, "' in candidate classes c(", paste(sprintf("'%s'",allCls), collapse=', '),")")
+    for (pack in allCls) {
+        ## Safety exclude any odd values here
+        if (!is.something(pack)) next
+        ## Check if package is known:
+        packOk <- find.package(pack, quiet=TRUE)
+        if (length(packOk) == 0) next
+        ## See if documentation exists:
+        x <- utils::help(methName, (pack) )
+        ## The strucutre appears to hold an odd semi-synthetic path to
+        ## the help file location, of format:
+        ##   file.path( "/path/to/help/", "topicName" )
+        if (is.something(x[1])) return( x )
+        ## If not, it appears to indicate that no topic was found - keep looking
+    }
+    ## If we got here, we failed to find a help topic for the method
+    warning("
+Sorry!
+I failed to find documentation for ", methName,"() in any of these packages:
+    ", paste(allCls, collapse=', '), "
+You can also try:
+    ?'",cl[1],"::",methName,"'  or   ??'",methName,"'
+")
+    invisible(NA)
+}
