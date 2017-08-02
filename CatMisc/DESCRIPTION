@@ -1,6 +1,6 @@
 Package: CatMisc
 Title: Collection of miscellaneous utility methods
-Version: 0.6
+Version: 0.8
 Date: 2017-08-02
 Authors@R: person("Charles", "Tilford", email = "cran@agent.fastmail.com", role = c("aut", "cre"))
 Author: Charles Tilford [aut, cre]

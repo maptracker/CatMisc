@@ -368,8 +368,8 @@ myRefClassThing$methods(
     
     initialize = function( x=3, help=FALSE ) {
         if (help) {
-            methodHelp('myRefClassThing', 'CatMisc',
-                       names(.refClassDef@contains))
+            print(methodHelp('myRefClassThing', 'CatMisc',
+                             names(.refClassDef@contains)))
             message("(an incomplete object will be unavoidably generated and can be ignored)")
             return(invisible(NA))
         }
