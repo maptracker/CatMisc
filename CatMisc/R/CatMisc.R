@@ -493,9 +493,6 @@ methodHelp <- function( mc, cl, inh ) {
         if (length(packOk) == 0) next
         ## See if documentation exists:
         x <- utils::help(methName, (pack) )
-        ## The strucutre appears to hold an odd semi-synthetic path to
-        ## the help file location, of format:
-        ##   file.path( "/path/to/help/", "topicName" )
         if (is.something(x[1])) return( x )
         ## If not, it appears to indicate that no topic was found - keep looking
     }
@@ -508,4 +505,7 @@ You can also try:
     ?'",cl[1],"::",methName,"'  or   ??'",methName,"'
 ")
     invisible(NA)
+
+    ## Note - useful function for extracting actual help data:
+    ## https://stackoverflow.com/a/9195691 (Richie Cotton)
 }
