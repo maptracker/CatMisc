@@ -105,7 +105,7 @@ is.empty.field <- function(x, zero.length.empty=FALSE) {
 #'
 #'   \item \code{NULL}
 #'
-#'   \item Objects that only contain \code{NA}
+#'   \item Objects that ONLY contain \code{NA}
 #'
 #'   \item Matrices with zero columns and zero rows
 #' 
@@ -149,7 +149,6 @@ is.def <- function(x) {
     }
 }
 
-
 #' Is Something
 #'
 #' Check if something is defined, and not zero or an empty string
@@ -188,7 +187,11 @@ is.something <- function(x) {
     } else if (is.logical(x)) {
         x
     } else {
-        TRUE # I guess? Will expand conditions as weirdness occurs...
+        TRUE # I guess?
+        
+        ## Further conditions will be added if I find 'things' that
+        ## are passing but shouldn't, or causing issues with the
+        ## if/else tree above.
     }
 }
 
@@ -292,9 +295,13 @@ textBlockToVector <- function (x, split="[\n\r]", trim.white=TRUE,
 #'
 #' Utility method to transparently handle 'normal' and compressed files
 #'
+#' If the file ends with 'gz', then \code{gzfile} will be used to open
+#' a file handle. Otherwise, \code{file} will be used.
+#'
 #' @param file Required, the path to the file to read
 #'
-#' @return A list with filehandle, basename, suffix and gzip flag
+#' @return A list with filehandle ("fh"), basename ("name"), suffix
+#'     ("sfx") and gzip flag ("gz")
 #' 
 #' @export
 
@@ -329,8 +336,9 @@ textBlockToVector <- function (x, split="[\n\r]", trim.white=TRUE,
 #'
 #' @details
 #'
-#' This is a toy ReferenceClass (aka 'R5') object used to illustrate the
-#' \link{methodHelp} function's use in documenting object methods
+#' This is a toy ReferenceClass (aka 'R5') object used to illustrate
+#' the \link{methodHelp} function's use in documenting object
+#' methods. It is also utilized by tests for \code{methodHelp}.
 #'
 #' @field x A numeric value
 #'
@@ -342,7 +350,8 @@ textBlockToVector <- function (x, split="[\n\r]", trim.white=TRUE,
 #' x <- myRefClassThing( x=17 )
 #' # Help at the method level
 #' x$thingProduct( help=TRUE )
-#' 
+#'
+#' @seealso \link{methodHelp}
 #' 
 #' @importFrom methods new setRefClass
 #' @export myRefClassThing
@@ -471,6 +480,9 @@ methodHelp <- function( mc, cl, inh ) {
     varName  <- vm[1]
     methName <- vm[2]
     
+    ## Note - useful function for extracting actual help data:
+    ## https://stackoverflow.com/a/9195691 (Richie Cotton)
+
     ## See if we can find a help topic named after the method in:
     ##   The main class
     ##   or: Any of the inherited classes
@@ -484,7 +496,6 @@ methodHelp <- function( mc, cl, inh ) {
     ## class, and look for the class documentation instead:
     if (methName == "initialize") methName <- cl[1]
     
-    ## message("The method is '", methName, "' using variable '", varName, "' in candidate classes c(", paste(sprintf("'%s'",allCls), collapse=', '),")")
     for (pack in allCls) {
         ## Safety exclude any odd values here
         if (!is.something(pack)) next
@@ -505,7 +516,4 @@ You can also try:
     ?'",cl[1],"::",methName,"'  or   ??'",methName,"'
 ")
     invisible(NA)
-
-    ## Note - useful function for extracting actual help data:
-    ## https://stackoverflow.com/a/9195691 (Richie Cotton)
 }
