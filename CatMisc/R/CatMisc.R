@@ -517,3 +517,140 @@ You can also try:
 ")
     invisible(NA)
 }
+
+# This package's environment, used to manage return values from inside
+# file.rename2()'s tryCatch environment:
+packEnv  <- as.environment(-1) 
+
+#' File Rename II
+#'
+#' Attempts to move/rename files over device boundaries
+#'
+#' @details
+#'
+#' At least some implementations of R apparently use a low-level
+#' rename library that will refuse to move files across device
+#' boundaries. That is, if the file resides at a path that is on a
+#' device different from the destination path, the rename will fail
+#' with an error message similar to:
+#'
+#' \code{
+#' In file.rename(fromPath, toPath) :
+#'   cannot rename file '/mnt/deviceX/foobar.txt' to '/mnt/deviceY/foobar.txt',
+#'   reason 'Invalid cross-device link'
+#' }
+#'
+#' Some (many? all?) systems disallow (or simply cannot?) make
+#' \emph{hard links} between devices. However, a move/rename is not a
+#' link (at least in outcome), so the error is a bit perplexing. The
+#' behavior is not limited to R, problems are also seen in Python
+#' where the \code{os.rename} method fails, but \code{shutil.move}
+#' will work (\url{https://stackoverflow.com/a/15300474})
+#'
+#' Anyhoo. If renames are failing with \code{cross-device link}
+#' messages, you're probably running into this issue. This method
+#' detects the issue (based on a failure to copy and a grepl to
+#' "Invalid cross.device link"), and attempts to solve the problem by
+#' a copy-then-delete-source mechanism. Doing this task carefully was
+#' more complex than initially anticipated. Source on GitHub has more
+#' commentary (which get removed if you just evaluate
+#' \code{file.rename2}) on why the code is the way it is.
+#'
+#' @param from Required, the current path to the file
+#' @param to Required, the path you wish to rename/move the file to
+#'
+#' @return A single logical value, TRUE for success, FALSE for failure.
+#'
+#' @seealso \link[base]{file.rename}
+#'
+#' @examples
+#'
+#' \donttest{
+#' from <- "/mnt/device1/foo.txt"
+#' to   <- "/mnt/device2/foo.txt"
+#' file.rename(from, to)  # Fails if /mnt/device1 and /mnt/device2 differ
+#' file.rename2(from, to) # Yay! Works.
+#' }
+#' 
+#' @export
+
+file.rename2 <- function (from, to) {
+    ## I haven't quite gotten a handle of the scope inside
+    ## tryCatch. At a minimum, it's not the scope <here>. So we'll use
+    ## get/assign to assure that we can manage the logical return
+    ## value:
+    rvName <- ".fr2rv" # Used to manage return value with assign/get
+    assign(rvName, FALSE, envir=packEnv)
+    tryCatch( {
+        ## Wrap in tryCatch to 1) avoid halting execution and 2)
+        ## capture and suppress message to not worry the user when we
+        ## can succeed with fallback method
+        assign(rvName, ok <- file.rename(from, to), envir=packEnv)
+        
+    }, warning = function(e) {
+        ## Something went wrong. We expect this specific kind of error
+        ## to come out as a warning, so snoop around here.
+        ok <- get(rvName, envir=packEnv)
+        if (ok) {
+            ## Huh. It *reports* it was succesful, but is still
+            ## emitting a warning. Trust it worked, but also pass on
+            ## the warning to the user:
+            warning(e)
+        } else if (grepl("Invalid cross.device link", e, ignore.case=TRUE)) {
+            ## This is the situation we wrote the method for. If that
+            ## message ever changes we'll miss catching it here.
+
+            ## INTERESTING FACT: file.rename() will fail with the
+            ## "Invalid cross-device link" warning EVEN IF `from` DOES
+            ## NOT EXIST. This library is really, REALLY worked up
+            ## about even the THEORETICAL risk of moving files across
+            ## state lines... So check that both the from file AND the
+            ## target directory exist, and emit a more informative
+            ## error if not:
+            
+            if (!file.exists(from)) {
+                
+                ## So. This is not really a cross-device issue, but
+                ## instead a source-not-found issue that *THINKS* it's
+                ## a cross-device issue. To be fair, it will *become*
+                ## a cross-device issue as soon as the source can be
+                ## found (on that device) *but* we'll be ready to
+                ## handle that correctly if/when that happens.
+                warning('In file.rename2("',from,'", "', to, '") :\n',
+                        "  cannot rename file '",from,"' to '",to,
+                        "', reason 'No such file or directory'")
+                
+            } else if (ok <- file.copy(from, to, overwrite=TRUE,
+                                        copy.mode=TRUE, copy.date=TRUE )) {
+                ## Since rename *will* clobber existing files, we are
+                ## setting overwrite=TRUE to mirror that behavior
+
+                ## Considered putting checksumming in here, decided I
+                ## would trust file.copy to be competent when
+                ## reporting success or failure. But I'll at least
+                ## double-check that the 'to' exists:
+                if (ok <- file.exists(to)) {
+                    ## Yay. If we can also remove the source, call it
+                    ## a succcess and return TRUE
+                    ok <- file.remove(from)
+                    if (!ok) { 
+                        ## Booo. We couldn't get rid of the source
+                        warning("file.rename2 - Destination successfully copied:\n    ", to,"\n  but source could not be removed:\n    ",from)
+                    }
+                } else {
+                    warning("Attempt to rename file failed by both file.rename and file.copy\n   - BUT file.copy claims to have worked! (it didn't)")
+                }
+            } else {
+                ## Copy warning *should* be emitted here. Also point
+                ## out why we were copying the file when the user was
+                ## just trying to rename it:
+                warning("Attempt to rename file failed by both file.rename and file.copy")
+            }
+        } else {
+            ## A problem, but not ours.
+            warning(e)
+        }
+        assign(rvName, ok, envir=packEnv)
+    })
+    get(rvName, envir=packEnv)
+}

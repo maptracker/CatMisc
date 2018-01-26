@@ -17,7 +17,7 @@ TRUE if "defined", otherwise FALSE. The following objects
 
   \item \code{NULL}
 
-  \item Objects that only contain \code{NA}
+  \item Objects that ONLY contain \code{NA}
 
   \item Matrices with zero columns and zero rows
 

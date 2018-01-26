@@ -9,8 +9,9 @@
 A tiny object that multiplies things
 }
 \details{
-This is a toy ReferenceClass (aka 'R5') object used to illustrate the
-\link{methodHelp} function's use in documenting object methods
+This is a toy ReferenceClass (aka 'R5') object used to illustrate
+the \link{methodHelp} function's use in documenting object
+methods. It is also utilized by tests for \code{methodHelp}.
 }
 \section{Fields}{
 
@@ -33,5 +34,7 @@ x <- myRefClassThing( x=17 )
 # Help at the method level
 x$thingProduct( help=TRUE )
 
-
+}
+\seealso{
+\link{methodHelp}
 }
