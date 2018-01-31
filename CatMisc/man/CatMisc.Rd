@@ -11,17 +11,12 @@ Charles Tilford (CAT)
 \itemize{
 
   \item is.empty.field - Test for empty RefClass fields
-
   \item is.def - Tests a scalar against a variety of "nothing" values
-
   \item is.something - Tests if object is defined, and not zero, "" or FALSE
-
   \item parenRegExp - Simplifies capture from regular expression parentheses
-
   \item textBlockToVector - Splits a block of text into lines
-
   \item .flexFilehandle - Automatically handles .gz files
-
   \item methodHelp - Used inside RefClass methods for "self-help"
+  \item file.rename2 - File rename that can cross device boundaries
 }
 }

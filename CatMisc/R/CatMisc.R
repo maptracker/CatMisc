@@ -10,18 +10,13 @@
 #' \itemize{
 #' 
 #'   \item is.empty.field - Test for empty RefClass fields
-#'
 #'   \item is.def - Tests a scalar against a variety of "nothing" values
-#'
 #'   \item is.something - Tests if object is defined, and not zero, "" or FALSE
-#'
 #'   \item parenRegExp - Simplifies capture from regular expression parentheses
-#'
 #'   \item textBlockToVector - Splits a block of text into lines
-#'
 #'   \item .flexFilehandle - Automatically handles .gz files
-#'
 #'   \item methodHelp - Used inside RefClass methods for "self-help"
+#'   \item file.rename2 - File rename that can cross device boundaries
 #' }
 #' 
 #' 
@@ -104,11 +99,8 @@ is.empty.field <- function(x, zero.length.empty=FALSE) {
 #' \itemize{
 #'
 #'   \item \code{NULL}
-#'
 #'   \item Objects that ONLY contain \code{NA}
-#'
 #'   \item Matrices with zero columns and zero rows
-#' 
 #'   \item Empty fields (TRUE value from \link{is.empty.field})
 #'
 #' }
@@ -653,4 +645,70 @@ file.rename2 <- function (from, to) {
         assign(rvName, ok, envir=packEnv)
     })
     get(rvName, envir=packEnv)
+}
+
+#' Relative Path
+#'
+#' Reports the relative file path from a parent directory to a child object
+#'
+#' @details
+#'
+#' Given 'child' and 'parent' file paths, return the relative path
+#' needed to reach the child from the parent, or \code{NA} if the
+#' child is not a descendant of the parent.
+#'
+#' By default, neither child nor parent will be checked for existance,
+#' or if they are an appropriate object. Both will have their paths
+#' normalized via \code{normalizePath()}. If you wish to force
+#' existance of both, set \code{mustWork=TRUE}.
+#'
+#' @param parent Required, the file path that presumably is an
+#'     ancestor of the child in the directory structure. To return a
+#'     non-NA value, this object presumably needs to resolve to a
+#'     directory.
+#' @param child Required, the file path of the "deeper" object (can be
+#'     any component of the file system - file, directory, link, etc.
+#' @param mustWork Default \code{FALSE}. Passed to normalizePath, set
+#'     to TRUE if you wish to assure that both child and parent exist.
+#'
+#' @return If either child or parent are any of \code{NULL}, \code{NA}
+#'     or an empty string, then \code{NA}. If child is the same as
+#'     parent (after normalization), an empty string. If child is not
+#'     a descendant of the parent, \code{NA}. In all other cases, a
+#'     single string representing the relative path.
+#'
+#' @seealso \code{\link[base]{normalizePath}
+#'
+#' @examples
+#'
+#' relativePath("/tmp/RtmpaacRRB", "/tmp/RtmpaacRRB/output.txt")
+#' relativePath(file.path(Sys.getenv('HOME'), "data"), "~/data/plots/x.png")
+#' relativePath("/bin/bang/boom", "/bin/etc/etc/etc.txt")
+#' relativePath("/usr/bin", "")
+#' 
+#' @export
+
+relativePath <- function(parent, child, mustWork=FALSE) {
+    ## Reject NULL, NA and "" for either argument
+    if (!is.something(child) || !is.something(parent)) return(NA)
+    parent <- normalizePath(parent, mustWork=mustWork)
+    child  <- normalizePath(child,  mustWork=mustWork)
+    ## If these are the same, return an empty string
+    if (parent == child) return("")
+    ## We need a trailing slash. According to file.path the '/'
+    ## separator will also be used on Windows systems, so we shouldn't
+    ## need to determine if we should use '\' instead:
+    if (!grepl('/$', parent)) parent <- paste0(parent, '/')
+    ## Simply "subtract out" the parent from the 'front' of the
+    ## child. We need to include the '^' front-of-string anchor, but
+    ## want the rest of parent to be literal. Use \Q\E tokens instead
+    ## of fixed=TRUE
+    regExp   <- paste0('^\\Q',parent,'\\E')
+    locChild <- gsub(regExp, "", child)
+    if (locChild == child) {
+        ## If child is unaltered, then it is not a descendant
+        NA
+    } else {
+        locChild
+    }
 }

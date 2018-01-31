@@ -16,11 +16,8 @@ TRUE if "defined", otherwise FALSE. The following objects
 \itemize{
 
   \item \code{NULL}
-
   \item Objects that ONLY contain \code{NA}
-
   \item Matrices with zero columns and zero rows
-
   \item Empty fields (TRUE value from \link{is.empty.field})
 
 }
