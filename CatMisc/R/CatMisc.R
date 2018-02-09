@@ -670,6 +670,11 @@ file.rename2 <- function (from, to) {
 #'     any component of the file system - file, directory, link, etc.
 #' @param mustWork Default \code{FALSE}. Passed to normalizePath, set
 #'     to TRUE if you wish to assure that both child and parent exist.
+#' @param normChild Default \code{TRUE}, which will cause the child
+#'     path to be normalized as well. This is not always desirable;
+#'     For example, \code{normalizePath} will convert links to their
+#'     ultimate target path. If you wish to leave links as-is, set
+#'     normChild to FALSE.
 #'
 #' @return If either child or parent are any of \code{NULL}, \code{NA}
 #'     or an empty string, then \code{NA}. If child is the same as
@@ -688,12 +693,12 @@ file.rename2 <- function (from, to) {
 #' 
 #' @export
 
-relativePath <- function(parent, child, mustWork=FALSE) {
+relativePath <- function(parent, child, mustWork=FALSE, normChild=TRUE) {
     ## Reject NULL, NA and "" for either argument
     if (!is.something(child) || !is.something(parent))
         return(as.character(NA))
     parent <- normalizePath(parent, mustWork=mustWork)
-    child  <- normalizePath(child,  mustWork=mustWork)
+    if (normChild) child  <- normalizePath(child, mustWork=mustWork)
     ## If these are the same, return an empty string
     if (parent == child) return("")
     ## We need a trailing slash. According to file.path the '/'

@@ -35,4 +35,19 @@ test_that("Relative Path", {
     expect_identical(relativePath("", d), charNA,
                      "empty parent should yield NA")
 
+    ## Preventing normalization of child paths
+    d  <- tempdir()
+    fn <- "realFile.txt"
+    f  <- file.path(d, fn)
+    cat("Hello World", file=f)
+    
+    ln <- "link.txt"
+    l  <- file.path(d, ln)
+    file.symlink(fn, l)
+    
+    expect_identical(relativePath(d, l, normChild=TRUE), fn,
+                     "Symlink should normally resolve to its target")
+    expect_identical(relativePath(d, l, normChild=FALSE), ln,
+                     "Symlink should resolve to itself if normChild=FALSE")
+
 })

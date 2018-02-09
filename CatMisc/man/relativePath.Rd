@@ -4,7 +4,7 @@
 \alias{relativePath}
 \title{Relative Path}
 \usage{
-relativePath(parent, child, mustWork = FALSE)
+relativePath(parent, child, mustWork = FALSE, normChild = TRUE)
 }
 \arguments{
 \item{parent}{Required, the file path that presumably is an
@@ -17,6 +17,12 @@ any component of the file system - file, directory, link, etc.}
 
 \item{mustWork}{Default \code{FALSE}. Passed to normalizePath, set
 to TRUE if you wish to assure that both child and parent exist.}
+
+\item{normChild}{Default \code{TRUE}, which will cause the child
+path to be normalized as well. This is not always desirable;
+For example, \code{normalizePath} will convert links to their
+ultimate target path. If you wish to leave links as-is, set
+normChild to FALSE.}
 }
 \value{
 If either child or parent are any of \code{NULL}, \code{NA}
