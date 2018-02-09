@@ -690,7 +690,8 @@ file.rename2 <- function (from, to) {
 
 relativePath <- function(parent, child, mustWork=FALSE) {
     ## Reject NULL, NA and "" for either argument
-    if (!is.something(child) || !is.something(parent)) return(NA)
+    if (!is.something(child) || !is.something(parent))
+        return(as.character(NA))
     parent <- normalizePath(parent, mustWork=mustWork)
     child  <- normalizePath(child,  mustWork=mustWork)
     ## If these are the same, return an empty string
@@ -707,7 +708,7 @@ relativePath <- function(parent, child, mustWork=FALSE) {
     locChild <- gsub(regExp, "", child)
     if (locChild == child) {
         ## If child is unaltered, then it is not a descendant
-        NA
+        as.character(NA)
     } else {
         locChild
     }
