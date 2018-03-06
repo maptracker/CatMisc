@@ -127,7 +127,8 @@ is.empty.field <- function(x, zero.length.empty=FALSE) {
 is.def <- function(x) {
     if (is.null(x) || is.empty.field(x)) {
         FALSE
-    } else if (is.object(x)) {
+    } else if (is.object(x) || is.function(x)) {
+        ## Objects and functions are always defined
         TRUE
     } else if (is.matrix(x) && (nrow(x) != 0 || ncol(x) != 0)) {
         ## As long as a matrix has some rows or columns it is
@@ -135,6 +136,10 @@ is.def <- function(x) {
         TRUE
         ## RefClass fields defined as "matrix" auto-instantiate with
         ## 0x0 matrices.
+
+        ## Eh. matrix() (with no arguments) returns a 1x1 logical
+        ## matrix with a single NA cell. Not sure how to handle that
+        ## (it will end up in this block == TRUE)
     } else {
         ## If any part of x is NOT NA, then it's defined
         any(!is.na(x))
@@ -177,7 +182,16 @@ is.something <- function(x) {
         ## Single string, "" = false
         if (x == "") { FALSE } else { TRUE }
     } else if (is.logical(x)) {
-        x
+        ## If we are here, we have a single thing
+        if (is.vector(x)) {
+            x
+        } else {
+            ## We could have a matrix here, and it could be one or
+            ## more NAs. To assure that this returns a logical value,
+            ## vectorize and run through is.def:
+            is.def(as.vector(x))
+            ## That should deal with a matrix of just NA
+        }
     } else {
         TRUE # I guess?
         
