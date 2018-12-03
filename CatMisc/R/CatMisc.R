@@ -732,3 +732,53 @@ relativePath <- function(parent, child, mustWork=FALSE, normChild=TRUE) {
         locChild
     }
 }
+
+##' All Reference Classes
+##'
+##' Return class representations for object and all inherited classes
+##'
+##' @details
+##'
+##' 
+##' @importFrom methods getRefClass
+##' @export
+
+allRefClasses <- function( obj, struct=NA, standardClasses=FALSE ) {
+    ## If this is the first call, initialize struct as an empty list
+    if (is.na(struct)) struct <- list()
+
+    if (inherits(obj, 'refObjectGenerator')) {
+        ## obj is already a RefClass definition, presumably passed
+        ## recursively
+        myClass     <- obj
+        myClassName <- myClass@className[1]
+    } else if (inherits(obj[[".refClassDef"]], "refClassRepresentation")) {
+        myClassName <- class(obj)[1]
+        myClass     <- methods::getRefClass(myClassName)
+    } else {
+        ## If this is not a RefClass object, there is nothing to do
+        return(struct)
+    }
+
+    ## If we have already dealt with the class then do nothing further:
+    if (inherits(struct[[ myClassName ]], 'refObjectGenerator'))
+        return(struct)
+
+    ## Ok, newly seen class! Note it:
+    struct[[ myClassName ]] <- myClass
+
+    stndCls <- c("envRefClass", ".environment", "refClass",
+                 "environment", "refObject")
+    ## Does it inherit any other classes?
+    cont    <- myClass@generator$def@contains
+    for (cName in names(cont)) {
+        ## Do not include the "standard" classes, unless requested
+        if (!standardClasses && is.element(cName, stndCls)) next
+        ## If we have not seen this class before, recursively call
+        ## this function to add it to the structure
+        if (!inherits(struct[[ cName ]], 'refObjectGenerator')) {
+            struct <- allRefClasses( methods::getRefClass( cName ) )
+        }
+    }
+    struct # Return the list structure
+}
