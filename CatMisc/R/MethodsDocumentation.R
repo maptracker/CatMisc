@@ -156,9 +156,11 @@ NULL
 #'
 #' @examples
 #'
-#' el <- RefClassHelper()
-#' el$actionMessage("This is exciting!")
-#' el$useColor(FALSE)
-#' el$actionMessage("Still exciting, but it does not show as much")
+#' rch <- RefClassHelper()
+#' ## Show the object:
+#' rch
+#' ## Turn off colorization, show the object again:
+#' rch$useColor(FALSE)
+#' rch
 NULL
 

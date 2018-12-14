@@ -52,3 +52,6 @@ relativePath("/bin/bang/boom", "/bin/etc/etc/etc.txt")
 relativePath("/usr/bin", "")
 
 }
+\seealso{
+\code{\link[base]{normalizePath}}
+}

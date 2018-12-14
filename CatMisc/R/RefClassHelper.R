@@ -32,34 +32,54 @@ RefClassHelper$methods(
         ## Manage useCol flag through method. Default is TRUE but can be reset
         .self$useColor( useColor )
     },
-    
-    colorMap = function(color, bg=FALSE, help=FALSE) {
-        "Convert a color name into a crayon colorizing function"
+
+
+    ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
+    ## Any objects that inherit this class should write their own
+    ## methods for:
+    ##   $fieldDescriptions()
+    ##   $help()
+    ##   $show()
+
+    fieldDescriptions = function(help=FALSE) {
+        "A static list of brief descriptions for each field in this object"
         if (help) return( CatMisc::methodHelp(match.call(), class(.self) ) )
-        if (!useColor() || ! CatMisc::is.def(color)) return(NA)
-        if (is.function(color[1])) return( color[1] )
-        key   <- "FG"
-        color <- tolower(color[1])
-        if (bg || grepl('^bg', color)) {
-            ## Use the background methods
-            key   <- "BG"
-            ## Lookup keys are standardized to discard the leading bg:
-            color <-  gsub('^bg','', color)
-        }
-        CatMisc:::colorNameToFunc()[[ key ]][[ color ]]
+        list(
+            "useCol"   = "Flag indicating if messages should be colorized",
+            "varName"  = "Extracted variable name associated with this object",
+            "varCheck" = "Datestamp, last attempt to extract varName")
     },
 
-    colorize = function(msg="", color=NULL, bgcolor=NULL, help=FALSE) {
-        "Use crayon to add ANSI color codes to text"
+    help = function (color=NULL, help=FALSE) {
+        "Display high-level help about all object methods"
         if (help) return( CatMisc::methodHelp(match.call(), class(.self) ) )
-        if (!is.character(msg)) msg <- as.character(msg)
-        fgFn <- colorMap(color, FALSE)
-        if (is.function(fgFn)) msg <- fgFn(msg)
-        bgFn <- colorMap(bgcolor, TRUE)
-        if (is.function(bgFn)) msg <- bgFn(msg)
-        msg
+        sections <- list(
+            "Color Management" = c("useColor", "colorize", "colorMap",
+            "colorNameToFunc"),
+            "Help Management" = c("methodHelp", "help", "showHelp"),
+            "Utility Methods" = c("allRefClasses")
+            )
+        showHelp(sections, 'RefClassHelper', color=color)
     },
-    
+
+    show = function(help=FALSE) {
+        "Pretty-print the object"
+        if (help) return( CatMisc::methodHelp(match.call(), class(.self) ) )
+        msg   <- character()
+        cName <- class(.self)
+        if (cName != "RefClassHelper") msg <- c(msg,
+            colorize(strwrap("This is the stub report for the `RefClassHelper` class. The maintainer of the 'parent' class should add a more informative $show() method.", 'yellow')))
+        var <- .selfVarName()
+        msg <- c(msg, colorize(paste0("# ", cName," Object"), "magenta"),
+                 paste0(colorize("  Colorize: ", "blue"), useColor()),
+                 paste0(colorize("  Variable: ", "blue"), var),
+                 paste0("# ",colorize(sprintf("%s$help()", var), "red"),
+                        " for additional information"))
+        cat(msg, fill=TRUE)
+    },
+
+    ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
+
     useColor = function(newval=NULL, help=FALSE) {
         "Get or set the flag determining if messages are colorized"
         if (help) return( CatMisc::methodHelp(match.call(), class(.self) ) )
@@ -75,13 +95,40 @@ RefClassHelper$methods(
         invisible(useCol)
     },
 
+    colorize = function(msg="", color=NULL, bgcolor=NULL, help=FALSE) {
+        "Use crayon to add ANSI color codes to text"
+        if (help) return( CatMisc::methodHelp(match.call(), class(.self) ) )
+        if (!is.character(msg)) msg <- as.character(msg)
+        fgFn <- colorMap(color, FALSE)
+        if (is.function(fgFn)) msg <- fgFn(msg)
+        bgFn <- colorMap(bgcolor, TRUE)
+        if (is.function(bgFn)) msg <- bgFn(msg)
+        msg
+    },
+    
+    colorMap = function(color, bg=FALSE, help=FALSE) {
+        "Convert a color name into a crayon colorizing function"
+        if (help) return( CatMisc::methodHelp(match.call(), class(.self) ) )
+        ## If useColor() is "off", or if `color` is not defined, do nothing
+        if (!useColor() || ! CatMisc::is.def(color)) return(NA)
+        if (is.function(color[1])) return( color[1] )
+        key   <- "FG"
+        color <- tolower(color[1])
+        if (bg || grepl('^bg', color)) {
+            ## Use the background methods
+            key   <- "BG"
+            ## Lookup keys are standardized to discard the leading bg:
+            color <-  gsub('^bg','', color)
+        }
+        CatMisc:::colorNameToFunc()[[ key ]][[ color ]]
+    },
+
     annotateFields = function(help=FALSE) {
         "Update object fields to include attributes with brief descriptions"
         if (help) return( CatMisc::methodHelp(match.call(), class(.self) ) )
-        ## If the descriptions are not defined then nothing to be done:
-        if (!is.function(.self[["fieldDescriptions"]])) return(FALSE)
+        fields <- getFieldDescriptions()
+        if (length(fields) == 0) return(FALSE)
         myClassName <- class(.self)
-        fields <- fieldDescriptions()
         hfmt <- paste0(" help('%s', '", myClassName,
                        "') # More information on field ")
         for (fld in names(fields)) {
@@ -93,34 +140,8 @@ RefClassHelper$methods(
         TRUE
     },
 
-    ## Any objects that inherit this class should write their own
-    ## methods for:
-    ##   $fieldDescriptions()
-    ##   $help()
-
-    fieldDescriptions = function(help=FALSE) {
-        "A static list of brief descriptions for each field in this object"
-        if (help) return( CatMisc::methodHelp(match.call(), class(.self) ) )
-        list("useCol"   = "Flag indicating if messages should be colorized",
-             "varName"  = "Extracted variable name associated with this object",
-             "varCheck" = "Datestamp, last attempt to extract varName")
-
-    },
-
-    help = function (color=NULL, help=FALSE) {
-        "Display high-level help about all object methods"
-        if (help) return( CatMisc::methodHelp(match.call(), class(.self) ) )
-        sections <- list(
-            "Color Management" = c("useColor", "colorize", "colorMap",
-            "colorNameToFunc"),
-            "Help Management" = c("methodHelp", "help", ".showHelp"),
-            "Utility Methods" = c("allRefClasses")
-            )
-        .showHelp(sections, 'RefClassHelper', color=color)
-    },
-
-    .showHelp = function (sections=list(), genericName='myObject', color=NULL,
-    help=FALSE) {
+    showHelp = function (sections=list(), genericName='myObject', color=NULL,
+    generic=FALSE, help=FALSE) {
         "Construct text for the help() method"
         if (help) return( CatMisc::methodHelp(match.call(), class(.self) ) )
         if (is.null(color)) color <- useColor() # Use color setting
@@ -133,8 +154,15 @@ RefClassHelper$methods(
         myClassName <- class(.self)
         myClass     <- methods::getRefClass(myClassName)
         allMeth     <- myClass$methods()
-        ## Subtract out the generic ones:
-        allMeth <- setdiff(allMeth, c("callSuper", "copy", "export", "field", "getClass", "getRefClass", "import", "initFields", ".objectPackage", ".objectParent", "show", "trace", "untrace", "usingMethods"))
+        ## Generic methods shared by all RefClass objects:
+        genMeth <- c("callSuper", "copy", "export", "field", "getClass", "getRefClass", "import", "initFields", ".objectPackage", ".objectParent", "show", "trace", "untrace", "usingMethods")
+        if (generic) {
+            ## If requested, show the methods under their own section
+            sections[["Generic RefClass Methods"]] <- genMeth
+        } else {
+            ## Remove the generic methods from display
+            allMeth <- setdiff(allMeth, genMeth)
+        }
         ## Subtract out some superclasses
         allMeth <- allMeth[ !grepl('#', allMeth) ]
 
@@ -206,11 +234,10 @@ whtName, doCol("# Inspect the object structure", comCol))
         strFmt <- "str(%s$%s)" # Fields with complex format
         simFmt <- "%s$%s"      # Simple fields
         fCls   <- .self$.refClassDef@fieldClasses # field structure
-        fDesc  <- if (is.function(.self[["fieldDescriptions"]])) {
-            fieldDescriptions( ) } else { list() }
+        fDesc  <- getFieldDescriptions()
         ## 'simple' vector types
         simpVec <- c("logical", "numeric", "double", "character",
-                     "factor", "complex")
+                     "factor", "complex", "POSIXct", "POSIXlt", "POSIXt")
         for (field in names(fCls)) {
             cls <- fCls[[ field ]]
             ## Is the field "simple"? We will consider it as such if:
@@ -230,8 +257,42 @@ whtName, doCol("# Inspect the object structure", comCol))
         if (length(fCls) == 0) {
             txt <- c(txt, doCol("# This object does not have fields\n", "yellow"))
         }
+        
         base::message(paste(txt, collapse='', sep=''))
         invisible(NULL)
+    },
+
+    getFieldDescriptions = function( help=FALSE ) {
+        "Recursively process an object's fieldDescriptions() return value"
+        if (help) return( CatMisc::methodHelp(match.call(), class(.self) ) )
+        ## Get descriptions specifically for this object:
+        rv <- if (is.function(.self[["fieldDescriptions"]]) ) {
+            fieldDescriptions()
+        } else { list() }
+        ## What about fields from inheritted packages? We can go
+        ## hunting for them by getting all Ref Class constructors,
+        ## then looking inside their method environment:
+        arc <- allRefClasses(class(.self))
+        if (length(arc) > 1) {
+            ## Look at the clases other than this one
+            for (ind in 2:length(arc)) {
+                cls <- arc[[ ind ]]
+                ## Does a 'fieldDescriptions' function exist in the
+                ## methods namespace for this class?
+                mEnv <- cls@generator$def@refMethods
+                if (exists('fieldDescriptions', envir=mEnv)) {
+                    ## Yup.
+                    ofd <- get('fieldDescriptions', envir=mEnv)
+                    try({
+                        ofl <- ofd() # Should be able to just call as a func
+                        for (nm in names(ofl)) {
+                            if (is.null(rv[[ nm ]])) rv[[ nm ]] <- ofl[[ nm ]]
+                        }
+                    })
+                }
+            }
+        }
+        rv
     },
 
     .selfVarName = function( def="myObj", fallbackVar="", help=FALSE ) {
@@ -429,7 +490,7 @@ NULL
 #' @importFrom utils help
 #' @export
 
-methodHelp <- function( mc, cl, inh ) {
+methodHelp <- function( mc, cl, inh=NULL ) {
     mc <- as.character(mc)
     if (!is.something(mc)) {
         warning("methodHelp(): No calling code was provided, can not determine method name")
@@ -477,6 +538,8 @@ methodHelp <- function( mc, cl, inh ) {
 Sorry!
 I failed to find documentation for ", methName,"() in any of these packages:
     ", paste(names(allPacks), collapse=', '), "
+    ... with any of these classes:
+      ", paste(clNames, collapse=', '), "
 You can also try:
     ?'",clNames[1],"::",methName,"'  or   ??'",methName,"'
 ")
@@ -490,11 +553,16 @@ You can also try:
 ##'
 ##' @details
 ##'
+##' Recursively follows 'contains' (inherited) reference classes to
+##' provide an exhaustive list of all reference classes associated
+##' with the provided object
+##'
 ##' @param obj Required, the object to be tested. This can be either a
 ##' class name, a class generator structure, or a RefClass object
 ##' itself.
 ##' @param standardClasses Default FALSE. If TRUE then the R-internal
-##' utility classes will be included in the output.
+##' utility classes (eg \code{envRefClass}) will be included in the
+##' output.
 ##' @param struct Default NA. Used internally for recursion
 ##' 
 ##' @importFrom methods getRefClass
@@ -519,7 +587,7 @@ allRefClasses <- function( obj, standardClasses=FALSE, struct=NA ) {
                 ## Object appears to be an instatiated RefClass object
                 myClassName <- class(obj)[1]
                 myClass     <- methods::getRefClass(myClassName)
-            }
+            }, silent=TRUE
             ))
         if (is.null(myClass)) {
             suppressWarnings(try(
