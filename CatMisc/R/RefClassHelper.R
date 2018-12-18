@@ -23,7 +23,17 @@ RefClassHelper <- setRefClass(
     useCol   = "logical",
     varName  = "character",
     varCheck = "POSIXct" )
-)
+    )
+
+### NOTE ON `::` ###
+
+## Inheritance in Reference Class objects is imperfect. In particular,
+## when one RC object "contains" another, functions (not methods) in
+## the contained object's namespace may not (will not?) be
+## 'automatically' exported to the inheritting object. For this
+## reason, many method calls are gratuitously prefixed with CatMisc::
+## to avoid having to explicitly import them in the other package's
+## NAMESPACE.
 
 RefClassHelper$methods(
     
@@ -50,26 +60,27 @@ RefClassHelper$methods(
             "varCheck" = "Datestamp, last attempt to extract varName")
     },
 
-    help = function (color=NULL, help=FALSE) {
-        "Display high-level help about all object methods"
+    helpSections = function( help=FALSE ) {
+        "Static list organizing object methods into conceptual sections"
         if (help) return( CatMisc::methodHelp(match.call(), class(.self) ) )
-        sections <- list(
+        list(
             "Color Management" = c("useColor", "colorize", "colorMap",
             "colorNameToFunc"),
-            "Help Management" = c("methodHelp", "help", "showHelp"),
-            "Utility Methods" = c("allRefClasses")
+            "Help Management" = c("methodHelp", "help",
+            "fieldDescriptions", "helpSections"),
+            "Utility Methods" = c("allRefClasses"),
+            "SKIP" = c("initialize")
             )
-        showHelp(sections, 'RefClassHelper', color=color)
     },
-
-    show = function(help=FALSE) {
+    
+    show = function( help=FALSE ) {
         "Pretty-print the object"
         if (help) return( CatMisc::methodHelp(match.call(), class(.self) ) )
         msg   <- character()
         cName <- class(.self)
         if (cName != "RefClassHelper") msg <- c(msg,
             colorize(strwrap("This is the stub report for the `RefClassHelper` class. The maintainer of the 'parent' class should add a more informative $show() method.", 'yellow')))
-        var <- .selfVarName()
+        var <- .self$.selfVarName()
         msg <- c(msg, colorize(paste0("# ", cName," Object"), "magenta"),
                  paste0(colorize("  Colorize: ", "blue"), useColor()),
                  paste0(colorize("  Variable: ", "blue"), var),
@@ -140,8 +151,8 @@ RefClassHelper$methods(
         TRUE
     },
 
-    showHelp = function (sections=list(), genericName='myObject', color=NULL,
-    generic=FALSE, help=FALSE) {
+    help = function (genericName='myObject', color=NULL, generic=FALSE,
+    help=FALSE) {
         "Construct text for the help() method"
         if (help) return( CatMisc::methodHelp(match.call(), class(.self) ) )
         if (is.null(color)) color <- useColor() # Use color setting
@@ -154,6 +165,7 @@ RefClassHelper$methods(
         myClassName <- class(.self)
         myClass     <- methods::getRefClass(myClassName)
         allMeth     <- myClass$methods()
+        sections    <- getHelpSections()
         ## Generic methods shared by all RefClass objects:
         genMeth <- c("callSuper", "copy", "export", "field", "getClass", "getRefClass", "import", "initFields", ".objectPackage", ".objectParent", "show", "trace", "untrace", "usingMethods")
         if (generic) {
@@ -272,7 +284,7 @@ whtName, doCol("# Inspect the object structure", comCol))
         ## What about fields from inheritted packages? We can go
         ## hunting for them by getting all Ref Class constructors,
         ## then looking inside their method environment:
-        arc <- allRefClasses(class(.self))
+        arc <- CatMisc::allRefClasses(class(.self))
         if (length(arc) > 1) {
             ## Look at the clases other than this one
             for (ind in 2:length(arc)) {
@@ -290,6 +302,46 @@ whtName, doCol("# Inspect the object structure", comCol))
                         }
                     })
                 }
+            }
+        }
+        rv
+    },
+
+    getHelpSections = function( help=FALSE ) {
+        "Recursively process an object's helpSections() return value"
+        if (help) return( CatMisc::methodHelp(match.call(), class(.self) ) )
+        ## Get descriptions specifically for this object:
+        rv <- if (is.function(.self[["helpSections"]]) ) {
+            helpSections()
+        } else { list() }
+        ## Make note of methods that we've already slotted into a section:
+        noted <- unname(unlist(rv))
+        ## What about sections from inheritted packages? As for
+        ## getFieldDescriptions, we get all Ref Class constructors,
+        ## then look inside their method environment:
+        arc <- CatMisc::allRefClasses(class(.self))
+        if (length(arc) <= 1) return(rv) # No other classes
+        ## Look at the clases other than this one
+        for (ind in 2:length(arc)) {
+            cls <- arc[[ ind ]]
+            ## Does a 'helpSections' function exist in the methods
+            ## namespace for this class?
+            mEnv <- cls@generator$def@refMethods
+            if (exists('helpSections', envir=mEnv)) {
+                ## Yup.
+                ohs <- get('helpSections', envir=mEnv)
+                try({
+                    ohl <- ohs() # Should be able to just call as a func
+                    for (sec in names(ohs)) {
+                        for (meth in (ohs[[ sec ]])) {
+                            if (!is.element(meth, noted)) {
+                                ## Method not yet placed in section
+                                rv[[ sec ]] <- c( rv[[sec]], meth )
+                                noted <- c(noted, meth)
+                            }
+                        }
+                    }
+                })
             }
         }
         rv
@@ -331,7 +383,6 @@ whtName, doCol("# Inspect the object structure", comCol))
     
 )
 
-
 #' Example Inherited RefClass Object
 #'
 #' A tiny object designed to be inherited by another tiny object
@@ -344,18 +395,50 @@ whtName, doCol("# Inspect the object structure", comCol))
 #'
 #' @field txt An interesting text value
 #'
+#' @return A character vector
+#'
+#' @examples
+#'
+#' mrcs <- myRefClassStuff(txt="Hello World")
+#' mrcs
+#' mrcs$help()
+#'
 #' @seealso \link{myRefClassThing}, \link{allRefClasses}
 
 myRefClassStuff <- setRefClass(
     "myRefClassStuff",
-    fields=list(txt="character"),
-    contains = c("RefClassHelper"))
+    fields   = list(txt="character"),
+    contains = c("RefClassHelper")
+    )
 
 myRefClassStuff$methods(
-    initialize = function (txt="Initial text") {
+    initialize = function (txt="Initial text", ...) {
         "Initialize a new myRefClassStuff object"
         txt <<- txt
+        callSuper(...)
     },
+    ## -----------------  Methods utilized by RefClassHelper -----------------
+    helpSections = function ( help=FALSE ) {
+        "Static list organizing object methods into conceptual sections"
+        if (help) return( CatMisc::methodHelp(match.call(), class(.self) ) )
+        list( "Text Functions" = c("thingText"))
+    },
+    fieldDescriptions = function( help=FALSE ) {
+        "A static list of brief descriptions for each field in this object"
+        if (help) return( CatMisc::methodHelp(match.call(), class(.self) ) )
+        list( "txt" = "A string stored by the Stuff" )
+    },
+    show = function (...) {
+        "Provide pretty-printed summary for RefClassStuff objects"
+        cName <- class(.self)
+        var   <- .self$.selfVarName()
+        msg   <- c(colorize(paste0("# Toy '",cName,"' RefClass Object"),"cyan"),
+                 paste0(colorize("  Text: ", "blue"), txt),
+                 paste0("# ",colorize(sprintf("%s$help()", var), "red"),
+                        " for additional information"))
+        cat(msg, sep="\n")
+    },
+    ## -----------------------------------------------------------------------
     thingText = function(prefix="[Thing Text]", help=FALSE) {
         "Reports the text held by the thing"
         if (help) return( methodHelp(match.call(), class(.self) ) )
@@ -364,6 +447,47 @@ myRefClassStuff$methods(
     }
 )
         
+#####################################################
+### ROxygen method documentation for $thingText():
+#####################################################
+
+#' Thing Text
+#'
+#' Get text for toy (demonstration) Reference Class object
+#'
+#' @name thingText
+#' @method thingText myRefClassStuff
+#'
+#' @details
+#'
+#' \preformatted{## Method Usage:
+#' myObject$thingText( help=TRUE )
+#' 
+#' myObject$thingText( prefix="[Thing Text]" )
+#' }
+#'
+#' Returns the thing's text, with a prefix
+#' 
+#' @param prefix Default '[Thing Text]'. A prefix to include before
+#' the actual Thing text.
+#' @param help Default FALSE. If TRUE, show this help and perform no
+#'     other actions.
+#'
+#' @return A character vector
+#'
+#' @examples
+#'
+#' mrcs <- myRefClassStuff(txt="Some text for the thing")
+#' ## Query the text field directly
+#' mrcs$txt
+#' ## Access the text by this method
+#' mrcs$thingText(prefix="[Hooray!]")
+#' # Method from the parent class (RefClassHelper)
+#' message(mrcs$colorize("This text is blue", color='blue'))
+#' 
+NULL
+
+
 #' Example Reference Class Object
 #'
 #' A tiny object that multiplies things
@@ -378,9 +502,18 @@ myRefClassStuff$methods(
 #'
 #' @examples
 #'
-#' x <- myRefClassThing( x=17 )
-#' # Help at the method level
-#' x$thingProduct( help=TRUE )
+#' mrct <- myRefClassThing( x=17, txt="Text is managed by Stuff" )
+#' # Help at the object level:
+#' mrct$help()
+#' # Help at the method level:
+#' mrct$thingProduct( help=TRUE )
+#'
+#' # This class's method:
+#' mrct$thingProduct(3)
+#' # Method from the parent class (myRefClassStuff):
+#' mrct$thingText(prefix="[Foo]")
+#' # Method from the grandparent class (RefClassHelper)
+#' message(mrct$colorize("This text is red", color='red'))
 #'
 #' @seealso \link{methodHelp}
 #' 
@@ -395,32 +528,47 @@ myRefClassThing <- setRefClass(
 
 myRefClassThing$methods(
 
-    ## In most cases, a generic methodHelp() can be made as:
-
-    ## methodHelp(match.call(),
-    ##            class(.self),
-    ##            names(.refClassDef@contains))
-
-    ## However, to make this toy example work without working up a
-    ## full package for 'myRefClassThing', we are manually including
-    ## 'CatMisc' instead, to allow the help topic to be found. The
-    ## method call is also being manually set for initialize
-    ## (otherwise it would be 'initialize', which would be recognized
-    ## as a constructor and converted to 'CatMisc')
-    
     initialize = function( x=3, ...) {
         "Initialize a new myRefClassThing object"
         x <<- x
         callSuper(...)
     },
+    
+    ## -----------------  Methods utilized by RefClassHelper -----------------
+    helpSections = function (help=FALSE) {
+        "Static list organizing object methods into conceptual sections"
+        if (help) return( CatMisc::methodHelp(match.call(), class(.self) ) )
+        list( "Math Functions" = c("thingProduct"))
+    },
+    fieldDescriptions = function(help=FALSE) {
+        "A static list of brief descriptions for each field in this object"
+        if (help) return( CatMisc::methodHelp(match.call(), class(.self) ) )
+        list( "x" = "A value stored by the Thing" )
+    },
+    show = function (...) {
+        "Provide pretty-printed summary for RefClassThing objects"
+        cName <- class(.self)
+        var   <- .self$.selfVarName()
+        msg   <- c(colorize(paste0("# Toy '",cName,"' RefClass Object"), "red"),
+                 paste0(colorize("  Text: ", "blue"), txt),
+                 paste0(colorize("     X: ", "blue"), x),
+                 paste0("# ",colorize(sprintf("%s$help()", var), "red"),
+                        " for additional information"))
+        cat(msg, sep="\n")
+    },
+    ## -----------------------------------------------------------------------
     thingProduct = function( y=7, help=FALSE ) {
         "Multiplies the x field by parameter y"
-        if (help) return( methodHelp(match.call(), class(.self) ) )
+        if (help) return( CatMisc::methodHelp(match.call(), class(.self) ) )
         ## Actual function code follows:
         message("Multiplying ",x," by ",y," ...")
         x * y
     }
 )
+
+#####################################################
+### ROxygen method documentation for $thingProduct():
+#####################################################
 
 #' Thing Product
 #'
@@ -429,10 +577,20 @@ myRefClassThing$methods(
 #' @name thingProduct
 #' @method thingProduct myRefClassThing
 #'
-#' @details Multiplies the internally-stored value of x by a supplied
-#'     second number.
+#' @details
+#'
+#' \preformatted{ ## Method Usage:
+#' myObject$thingProduct( help=TRUE )
+#' 
+#' myObject$thingProduct( y=7 )
+#' }
+#'
+#' Multiplies the internally-stored value of x by a supplied second
+#' number.
 #' 
 #' @param y The second number
+#' @param help Default FALSE. If TRUE, show this help and perform no
+#'     other actions.
 #'
 #' @return A numeric product of x * y
 #'
@@ -492,7 +650,7 @@ NULL
 
 methodHelp <- function( mc, cl, inh=NULL ) {
     mc <- as.character(mc)
-    if (!is.something(mc)) {
+    if (!CatMisc::is.something(mc)) {
         warning("methodHelp(): No calling code was provided, can not determine method name")
         return( invisible(NA) )
     }
@@ -513,7 +671,7 @@ methodHelp <- function( mc, cl, inh=NULL ) {
     ## https://stackoverflow.com/a/9195691 (Richie Cotton)
 
     ## Get all classes associated with this object
-    arc      <- allRefClasses( cl )
+    arc      <- CatMisc::allRefClasses( cl )
     clNames  <- names(arc)
     allPacks <- list()  # Gather observed packages
     
@@ -527,7 +685,7 @@ methodHelp <- function( mc, cl, inh=NULL ) {
         if (length(packOk) == 0) next
         x <- utils::help(methName, (pack) )
         ## See if documentation exists:
-        if (is.something(x[1])) return( x )
+        if (CatMisc::is.something(x[1])) return( x )
         ## If not, it appears to indicate that no topic was found - keep looking
         allPacks[[ pack ]] <- TRUE
     }

@@ -46,6 +46,87 @@
 #' message(rch$colorize("I'm still down, I'm just not showing it", "blue"))
 NULL
 
+#' Field Descriptions
+#'
+#' Get brief descriptions for all RefClass fields used by the object
+#'
+#' @name fieldDescriptions
+#' @method fieldDescriptions RefClassHelper
+#' 
+#' @details
+#'
+#' \preformatted{
+#' ## Method Usage:
+#' myObject$fieldDescriptions( help=TRUE )
+#' 
+#' myObject$fieldDescriptions( )
+#' }
+#'
+#' This method simply returns a list of descriptive text for each
+#' Reference Class field defined for the object. It is intended to
+#' provide self-documenting information to the \link{help} function.
+#'
+#' If the object inherits other RefClass classes, they will be
+#' recursively queried for descriptive text associated in their own
+#' \code{fieldDescriptions} structures. This recursion is managed by
+#' \link{getFieldDescriptions}.
+#' 
+#' @param help Default FALSE. If TRUE, show this help and perform no
+#'     other actions.
+#'
+#' @return A list of character vectors, each a single entry long, each
+#' (ideally) being a brief description of the field.
+#'
+#' @seealso \link{getFieldDescriptions}, \link{help},
+#' \link{helpSections}
+#'
+#' @examples
+#'
+#' el <- RefClassHelper()
+#' el$fieldDescriptions()
+#' el$help() # Descriptive text will be at bottom
+NULL
+
+#' Help Sections
+#'
+#' Get a list that organizes methods into conceptually-related sections
+#'
+#' @name helpSections
+#' @method helpSections RefClassHelper
+#' 
+#' @details
+#'
+#' \preformatted{
+#' ## Method Usage:
+#' myObject$helpSections( help=TRUE )
+#' 
+#' myObject$helpSections( )
+#' }
+#'
+#' This method simply returns a list that organizes the methods used
+#' by the Reference Class object into related sections. It is intended
+#' to provide self-documenting information to the \link{help}
+#' function.
+#'
+#' If the object inherits other RefClass classes, they will be
+#' recursively queried for their own sections. This recursion is managed by
+#' \link{getHelpSections}.
+#' 
+#' @param help Default FALSE. If TRUE, show this help and perform no
+#'     other actions.
+#'
+#' @return A list of character vectors, each containing one or more
+#' methods within the section defined by that entry's name.
+#'
+#' @seealso \link{getHelpSections}, \link{help}, \link{fieldDescriptions}
+#'
+#' @examples
+#'
+#' el <- RefClassHelper()
+#' el$helpSections()
+#' el$help() # Methods will be broken out into the above sections
+NULL
+
 #' Map Color
 #'
 #' RefClassHelper object method to turn a string into a crayon color function
@@ -136,7 +217,8 @@ NULL
 #'
 #' @details
 #'
-#' \preformatted{#' ## Method Usage:
+#' \preformatted{
+#' ## Method Usage:
 #' myObject$useColor( help=TRUE )
 #' 
 #' myObject$useColor( newval=NULL )
@@ -162,5 +244,180 @@ NULL
 #' ## Turn off colorization, show the object again:
 #' rch$useColor(FALSE)
 #' rch
+NULL
+
+#' Object Help
+#'
+#' Summarize object methods and fields, and commands to get additional help
+#'
+#' @name help
+#' @method help RefClassHelper
+#'
+#' @details
+#'
+#' \preformatted{
+#' ## Method Usage:
+#' myObject$help( help=TRUE )
+#' 
+#' myObject$help( genericName='myObject', color=NULL, generic=FALSE )
+#' }
+#'
+#' Shows help for the object. This method attempts to both be compact
+#' and exhaustive. Each object method will be shown, as well as a
+#' one-line description of its function (if it has been defined in the
+#' code). Additionally, the method call using the help flag will be
+#' shown explicitly with the actual object variable. That is, if
+#' \code{$help()} is called on an object named \code{foo} that has a
+#' method named code\{soak}, then the reported text will include:
+#'
+#' \code{foo$soak( help=TRUE )}
+#'
+#' This is to aid rapid copy-paste exploration of the object.
+#'
+#' Object fields will also be reported, along with their descriptive
+#' text.
+#' 
+#' @param genericName Default 'myObject'. Used if R can not determine
+#' the actual variable name of the object (via \link{.selfVarName})
+#' @param color Default \code{NULL}, which will use the value defined
+#' by \link{useColor}. If TRUE, then output will be colorized.
+#' @param generic Default \code{FALSE}. If TRUE, then generic
+#' Reference Class methods common to all RefClass objects will be
+#' included.
+#' @param help Default FALSE. If TRUE, show this help and perform no
+#'     other actions.
+#'
+#' @return NULL, invisibly
+#'
+#' @seealso \link{getFieldDescriptions}, \link{getHelpSections},
+#' \link{show}
+#'
+#' @examples
+#'
+#' rch <- RefClassHelper()
+#' ## Report help for the object
+#' rch$help()
+#' rch$help( generic=TRUE ) # Include generic methods
+NULL
+
+#' Get Field Descriptions
+#'
+#' Get brief descriptions for all object fields
+#'
+#' @name getFieldDescriptions
+#' @method getFieldDescriptions RefClassHelper
+#'
+#' @details
+#'
+#' \preformatted{
+#' ## Method Usage:
+#' myObject$getFieldDescriptions( help=TRUE )
+#' 
+#' myObject$getFieldDescriptions( )
+#' }
+#'
+#' Returns a list, with names representing object fields and values
+#' being descriptions of each one. The descriptions need to be defined
+#' in the object's \link{fieldDescriptions} method. If inheritance is
+#' being used, they will be recovered recursively for each parent
+#' class. The function is used by the \link{help} method.
+#' 
+#' @param help Default FALSE. If TRUE, show this help and perform no
+#'     other actions.
+#'
+#' @return A list of character strings
+#'
+#' @seealso \link{fieldDescriptions}, \link{getHelpSections},
+#' \link{help}
+#'
+#' @examples
+#'
+#' rch <- RefClassHelper()
+#' rch$getFieldDescriptions()
+#' rch$help() # Will be shown at the end of the help
+NULL
+
+#' Get Help Sections
+#'
+#' Get a list of all notable object methods, organized into sections
+#'
+#' @name getHelpSections
+#' @method getHelpSections RefClassHelper
+#'
+#' @details
+#'
+#' \preformatted{
+#' ## Method Usage:
+#' myObject$getHelpSections( help=TRUE )
+#' 
+#' myObject$getHelpSections( )
+#' }
+#'
+#' Returns a list, with names representing conceptual sections and
+#' values being object methods assigned to those sections. This
+#' structure needs to be defined in the object's \link{helpSections}
+#' method. If inheritance is being used, sections will be recovered
+#' recursively for each parent class. The function is used by the
+#' \link{help} method.
+#' 
+#' @param help Default FALSE. If TRUE, show this help and perform no
+#'     other actions.
+#'
+#' @return A list of character strings
+#'
+#' @seealso \link{helpSections}, \link{getFieldDescriptions},
+#' \link{help}
+#'
+#' @examples
+#'
+#' rch <- RefClassHelper()
+#' rch$getHelpSections()
+#' rch$help() # Will be used near the top to organize methods
+NULL
+
+#' Get Name of Current Variable
+#'
+#' For an object, get the variable name being used by R to 'hold' it
+#'
+#' @name dotSelfVarName
+#' @aliases .selfVarName
+#' @method .selfVarName RefClassHelper
+#'
+#' @details
+#'
+#' \preformatted{
+#' ## Method Usage:
+#' myObject$.selfVarName( help=TRUE )
+#' 
+#' myObject$.selfVarName( def="myObj", fallbackVar="" )
+#' }
+#'
+#' Returns the variable name of an object. That is, if you have an
+#' object \code{foo}, calling \code{foo$.selfVarName} should return
+#' \code{"foo"}.
+#'
+#' This functionality is used to generate self-referential help text
+#' that can be copied-and-pasted to allow for easy exploration of the
+#' object.
+#'
+#' @param def Default \code{"myObj"}, a default name that can be used
+#' if the actual name can not be found.
+#' @param fallbackVar Default \code{""}. Another default name, will be
+#' used in preference to \code{def} if the real name can not be
+#' found. There are ... reasons ... for this. I can't remember what
+#' they were and am too timid to simplify the function at this point.
+#' @param help Default FALSE. If TRUE, show this help and perform no
+#'     other actions.
+#'
+#' @return A single character string
+#'
+#' @seealso \link{help}, \link{getFieldDescriptions},
+#' \link{help}
+#'
+#' @examples
+#'
+#' rch <- RefClassHelper()
+#' rch$.selfVarName()
+#' identical("rch", rch$.selfVarName())
 NULL
 

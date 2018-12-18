@@ -27,6 +27,3 @@ test_that("Create toy RefClass Object", {
 
 })
 
-test_that("objects", {
-})
-
