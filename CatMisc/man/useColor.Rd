@@ -18,7 +18,8 @@ A single logical value, invisibly
 RefClassHelper object method to get/set colorization flag
 }
 \details{
-\preformatted{#' ## Method Usage:
+\preformatted{
+## Method Usage:
 myObject$useColor( help=TRUE )
 
 myObject$useColor( newval=NULL )

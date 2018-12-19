@@ -64,12 +64,11 @@ RefClassHelper$methods(
         "Static list organizing object methods into conceptual sections"
         if (help) return( CatMisc::methodHelp(match.call(), class(.self) ) )
         list(
-            "Color Management" = c("useColor", "colorize", "colorMap",
-            "colorNameToFunc"),
-            "Help Management" = c("methodHelp", "help",
-            "fieldDescriptions", "helpSections"),
-            "Utility Methods" = c("allRefClasses"),
-            "SKIP" = c("initialize")
+            "Color Management" = c("useColor", "colorize", "colorMap"),
+            "Help Utilities" = c("help", "annotateFields",
+                                 "fieldDescriptions", "getFieldDescriptions",
+                                 "helpSections", "getHelpSections"),
+            "SKIP" = c("initialize", ".selfVarName")
             )
     },
     
@@ -179,7 +178,8 @@ RefClassHelper$methods(
         allMeth <- allMeth[ !grepl('#', allMeth) ]
 
         ## Junk drawer section for methods not defined in `sections`:
-        sections[["Other Methods"]] <- setdiff(allMeth, unname(unlist(sections)))
+        om <- setdiff(allMeth, unname(unlist(sections)))
+        if (length(om) > 0) sections[["Other Methods"]] <- om
 
         ## Basic header:
         txt <- sprintf("
@@ -331,9 +331,9 @@ whtName, doCol("# Inspect the object structure", comCol))
                 ## Yup.
                 ohs <- get('helpSections', envir=mEnv)
                 try({
-                    ohl <- ohs() # Should be able to just call as a func
-                    for (sec in names(ohs)) {
-                        for (meth in (ohs[[ sec ]])) {
+                    otherSections <- ohs() # Should be a function
+                    for (sec in names(otherSections)) {
+                        for (meth in (otherSections[[ sec ]])) {
                             if (!is.element(meth, noted)) {
                                 ## Method not yet placed in section
                                 rv[[ sec ]] <- c( rv[[sec]], meth )
@@ -730,7 +730,7 @@ You can also try:
 
 allRefClasses <- function( obj, standardClasses=FALSE, struct=NA ) {
     ## If this is the first call, initialize struct as an empty list
-    if (is.na(struct)) struct <- list()
+    if (!CatMisc::is.def(struct)) struct <- list()
 
     myClass     <- NULL
     myClassName <- NULL

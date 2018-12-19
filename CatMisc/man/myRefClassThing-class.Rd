@@ -22,16 +22,31 @@ methods. It is also utilized by tests for \code{methodHelp}.
 \section{Methods}{
 
 \describe{
-\item{\code{initialize(txt = "Initial text")}}{Initialize a new myRefClassStuff object}
+\item{\code{fieldDescriptions(help = FALSE)}}{A static list of brief descriptions for each field in this object}
+
+\item{\code{helpSections(help = FALSE)}}{Static list organizing object methods into conceptual sections}
+
+\item{\code{initialize(txt = "Initial text", ...)}}{Initialize a new myRefClassStuff object}
+
+\item{\code{show(...)}}{Provide pretty-printed summary for RefClassStuff objects}
 
 \item{\code{thingProduct(y = 7, help = FALSE)}}{Multiplies the x field by parameter y}
 }}
 
 \examples{
 
-x <- myRefClassThing( x=17 )
-# Help at the method level
-x$thingProduct( help=TRUE )
+mrct <- myRefClassThing( x=17, txt="Text is managed by Stuff" )
+# Help at the object level:
+mrct$help()
+# Help at the method level:
+mrct$thingProduct( help=TRUE )
+
+# This class's method:
+mrct$thingProduct(3)
+# Method from the parent class (myRefClassStuff):
+mrct$thingText(prefix="[Foo]")
+# Method from the grandparent class (RefClassHelper)
+message(mrct$colorize("This text is red", color='red'))
 
 }
 \seealso{

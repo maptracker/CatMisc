@@ -421,3 +421,41 @@ NULL
 #' identical("rch", rch$.selfVarName())
 NULL
 
+#' Initialize RefClass Object
+#'
+#' R internal method to create a new Reference Class instance
+#'
+#' @name initialize
+#' @method initialize RefClassHelper
+#'
+#' @details
+#'
+#' The \code{$initialize()} object method is one of the reserved
+#' Reference Class functions. It executes whenever you generate a new
+#' object (that is, if a class `foo` is defined, when you run \code{x
+#' <- foo()}). You should not call \code{$initialize()} directly.
+#'
+#' In many cases you may not need to define such a method. I have
+#' found, however, that if you are attempting RefClass inheritance
+#' that the method can be useful. Some suggestions when creating a
+#' method:
+#'
+#' \itemize{
+#'    \item Make use of \dots in the parameters.
+#'    \item Be sure to call \code{callSuper(...)} to invoke the
+#'          \code{initialize} for parent classes
+#'    \item This is a reasonable place to define default field values, expose
+#'          them for parameterized customization, and put in sanity-checking
+#'    \item Using the same variable name for parameters and fields works, but
+#'          can be confusing.
+#'    \item Do not forget to set fields with \code{<<-}
+#' }
+#'
+#' @return The newly created RefClass object
+#' 
+#' @examples
+#'
+#' ## Using one of the built-in toy objects:
+#' rct <- myRefClassThing() # There. That was it. It ran transparently.
+NULL
+
