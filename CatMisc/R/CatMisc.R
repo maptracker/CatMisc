@@ -26,7 +26,6 @@ packEnv  <- as.environment(-1)
 #'   \item file.rename2 - File rename that can cross device boundaries
 #' }
 #' 
-#' 
 NULL
 
 #' Is Empty Field
