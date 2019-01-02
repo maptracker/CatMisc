@@ -36,12 +36,14 @@ should be used in messaging}
 
 \item{\code{getFieldDescriptions(help = FALSE)}}{Recursively process an object's fieldDescriptions() return value}
 
-\item{\code{help(color = NULL, help = FALSE)}}{Display high-level help about all object methods}
+\item{\code{getHelpSections(help = FALSE)}}{Recursively process an object's helpSections() return value}
+
+\item{\code{help(genericName = "myObject", color = NULL, generic = FALSE,
+  help = FALSE)}}{Construct text for the help() method}
+
+\item{\code{helpSections(help = FALSE)}}{Static list organizing object methods into conceptual sections}
 
 \item{\code{initialize(useColor = TRUE, ...)}}{Create a new RefClassHelper Reference Class object}
-
-\item{\code{showHelp(sections = list(), genericName = "myObject", color = NULL,
-  generic = FALSE, help = FALSE)}}{Construct text for the help() method}
 
 \item{\code{useColor(newval = NULL, help = FALSE)}}{Get or set the flag determining if messages are colorized}
 }}

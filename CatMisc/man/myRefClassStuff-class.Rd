@@ -5,6 +5,9 @@
 \alias{myRefClassStuff-class}
 \alias{myRefClassStuff}
 \title{Example Inherited RefClass Object}
+\value{
+A character vector
+}
 \description{
 A tiny object designed to be inherited by another tiny object
 }
@@ -22,11 +25,24 @@ of \link{allRefClasses}.
 \section{Methods}{
 
 \describe{
+\item{\code{fieldDescriptions(help = FALSE)}}{A static list of brief descriptions for each field in this object}
+
+\item{\code{helpSections(help = FALSE)}}{Static list organizing object methods into conceptual sections}
+
 \item{\code{initialize(useColor = TRUE, ...)}}{Create a new RefClassHelper Reference Class object}
+
+\item{\code{show(help = FALSE)}}{Pretty-print the object}
 
 \item{\code{thingText(prefix = "[Thing Text]", help = FALSE)}}{Reports the text held by the thing}
 }}
 
+\examples{
+
+mrcs <- myRefClassStuff(txt="Hello World")
+mrcs
+mrcs$help()
+
+}
 \seealso{
 \link{myRefClassThing}, \link{allRefClasses}
 }

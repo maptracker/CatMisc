@@ -308,6 +308,10 @@ textBlockToVector <- function (x, split="[\n\r]", trim.white=TRUE,
 #'
 #' Utility method to transparently handle 'normal' and compressed files
 #'
+#' @name dotFlexFilehandle
+#' 
+#' @details
+#'
 #' If the file ends with 'gz', then \code{gzfile} will be used to open
 #' a file handle. Otherwise, \code{file} will be used.
 #'

@@ -5,6 +5,9 @@
 \title{Thing Product}
 \arguments{
 \item{y}{The second number}
+
+\item{help}{Default FALSE. If TRUE, show this help and perform no
+other actions.}
 }
 \value{
 A numeric product of x * y
@@ -13,8 +16,14 @@ A numeric product of x * y
 A toy object method used to illustrate \link{methodHelp}
 }
 \details{
-Multiplies the internally-stored value of x by a supplied
-    second number.
+\preformatted{ ## Method Usage:
+myObject$thingProduct( help=TRUE )
+
+myObject$thingProduct( y=7 )
+}
+
+Multiplies the internally-stored value of x by a supplied second
+number.
 }
 \examples{
 

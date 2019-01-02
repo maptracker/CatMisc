@@ -268,7 +268,7 @@ NULL
 #' code). Additionally, the method call using the help flag will be
 #' shown explicitly with the actual object variable. That is, if
 #' \code{$help()} is called on an object named \code{foo} that has a
-#' method named code\{soak}, then the reported text will include:
+#' method named \code{soak}, then the reported text will include:
 #'
 #' \code{foo$soak( help=TRUE )}
 #'

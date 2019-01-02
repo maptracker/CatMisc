@@ -404,6 +404,9 @@ whtName, doCol("# Inspect the object structure", comCol))
 #' mrcs$help()
 #'
 #' @seealso \link{myRefClassThing}, \link{allRefClasses}
+#' 
+#' @export myRefClassStuff
+#' @exportClass myRefClassStuff
 
 myRefClassStuff <- setRefClass(
     "myRefClassStuff",
