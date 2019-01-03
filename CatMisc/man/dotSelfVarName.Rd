@@ -45,6 +45,6 @@ rch$.selfVarName()
 identical("rch", rch$.selfVarName())
 }
 \seealso{
-\link{help}, \link{getFieldDescriptions},
-\link{help}
+\link{varName}, \link{help}, \link{varCheck},
+\link{getFieldDescriptions}
 }

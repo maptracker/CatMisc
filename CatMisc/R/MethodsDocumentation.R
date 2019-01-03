@@ -46,6 +46,56 @@
 #' message(rch$colorize("I'm still down, I'm just not showing it", "blue"))
 NULL
 
+#' RefClassHelper Variable Name
+#'
+#' Internal RefClass field holding its own variable name
+#'
+#' @name varName
+#'
+#' @details
+#'
+#' A character string containing the name of the object. That is, an
+#' object invoked with the R variable \code{x} should have "x" as the
+#' value for this field. It is set using the \link{.selfVarName}
+#' function.
+#'
+#' @seealso \link{.selfVarName}, \link{help}, \link{varCheck},
+#' \link{getFieldDescriptions}
+#'
+#' @examples
+#' 
+#' rch <- RefClassHelper( )
+#' rch$varName # Should initially be unset
+#' rch # Pretty-print the object, which will attempt to discover its name
+#' rch$varName # Should now be "rch"
+NULL
+
+#' RefClassHelper Variable Name Last Checked
+#'
+#' Internal RefClass field tracking the last time the object name was checked
+#'
+#' @name varCheck
+#'
+#' @details
+#'
+#' The \link{varName} field caches the variable name of the
+#' object. Finding this value sometimes fails (not sure why). It is
+#' generally possible to eventually recover the name. The
+#' \code{varCheck} field tracks the last attempt to get the name, and
+#' restricts retries to once every 10 seconds.  function.
+#'
+#' @seealso \link{varName}, \link{.selfVarName}, \link{help},
+#' \link{getFieldDescriptions}
+#'
+#' @examples
+#' 
+#' rch <- RefClassHelper( )
+#' rch$varCheck # Not attempted yet
+#' rch # Pretty-print the object, which will attempt to discover its name
+#' Sys.time()
+#' rch$varCheck # Should be close to the time above
+NULL
+
 #' Field Descriptions
 #'
 #' Get brief descriptions for all RefClass fields used by the object
@@ -411,8 +461,8 @@ NULL
 #'
 #' @return A single character string
 #'
-#' @seealso \link{help}, \link{getFieldDescriptions},
-#' \link{help}
+#' @seealso \link{varName}, \link{help}, \link{varCheck},
+#' \link{getFieldDescriptions}
 #'
 #' @examples
 #'

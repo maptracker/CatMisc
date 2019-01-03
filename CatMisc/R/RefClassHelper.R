@@ -138,14 +138,25 @@ RefClassHelper$methods(
         if (help) return( CatMisc::methodHelp(match.call(), class(.self) ) )
         fields <- getFieldDescriptions()
         if (length(fields) == 0) return(FALSE)
-        myClassName <- class(.self)
-        hfmt <- paste0(" help('%s', '", myClassName,
-                       "') # More information on field ")
+        hfmt <- paste0(" help('%s', '%s') # More information on field ")
         for (fld in names(fields)) {
             if (is.null(.self[[fld]])) next # Can't attribute NULL
             ## The [[ accessor seems to work for fields?
             attr(.self[[fld]], "Description") <- fields[[fld]]
-            attr(.self[[fld]], "Help") <- sprintf(hfmt,fld)
+            ## We need to find the package(s) the field is attached
+            ## to, and then see if help is available for the field.
+            arc  <- CatMisc::allRefClasses(class(.self))
+            pkgs <- unique(unlist(lapply(arc, function(x) x@package)))
+            pat  <- paste0('^', fld, '$') # Full matches on field name only
+            hlp  <- help.search(pat, package=pkgs, fields="alias")$matches
+            ## Now get the topic from the package 'closest' to this object
+            fndPkg <- intersect(pkgs, hlp$Package)
+            attr(.self[[fld]], "Help") <- if (length(fndPkg) == 0) {
+                ## Could not find help
+                "## No help topic found for this field"
+            } else {
+                sprintf(hfmt,fld,fndPkg[1])
+            }
         }
         TRUE
     },
