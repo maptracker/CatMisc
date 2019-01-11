@@ -162,7 +162,7 @@ RefClassHelper$methods(
     },
 
     help = function (genericName='myObject', color=NULL, generic=FALSE,
-    help=FALSE) {
+    rm.skip=TRUE, help=FALSE) {
         "Construct text for the help() method"
         if (help) return( CatMisc::methodHelp(match.call(), class(.self) ) )
         if (is.null(color)) color <- useColor() # Use color setting
@@ -210,9 +210,12 @@ whtName, doCol("# Inspect the object structure", comCol))
         noHelp <- c()
         ## Add snippets for each method, broken down by section
         for (sec in names(sections)) {
-            if (sec == "SKIP") next
-            txt <- c(txt, doCol(paste("\n############\n###", sec, "\n"),comCol))
             meths <- sections[[ sec ]]
+            if (sec == "SKIP") {
+                if (rm.skip) next # By default do not show SKIP methods
+                sec <- "Normally Skipped Methods (rm.skip=TRUE to hide)"
+            }
+            txt <- c(txt, doCol(paste("\n############\n###", sec, "\n"),comCol))
             for (meth in meths) {
                 ## Going to see if we can extract the ROxygen
                 ## description string from the method

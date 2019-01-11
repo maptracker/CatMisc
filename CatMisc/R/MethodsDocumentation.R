@@ -334,6 +334,10 @@ NULL
 #' @param generic Default \code{FALSE}. If TRUE, then generic
 #' Reference Class methods common to all RefClass objects will be
 #' included.
+#' @name rm.skip Default \code{TRUE}, which will hide methods that the
+#' developer has chosen to normally 'skip'. These tend to be internal
+#' or uninteresting functions and are excluded to avoid overwhelming
+#' the user. Setting this value to \code{FALSE} will list them as well.
 #' @param help Default FALSE. If TRUE, show this help and perform no
 #'     other actions.
 #'
