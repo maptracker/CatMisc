@@ -11,6 +11,15 @@
 #'   should be used in messaging
 #' @field varName Extracted variable name of the object
 #' @field varCheck Last time an attempt was made to extract varName
+#'
+#' @examples
+#'
+#' rch <- RefClassHelper()
+#' rch        # Summary text
+#' rch$help() # Detailed help text
+#' message(rch$colorize("This is blue", color="blue"))
+#' rch$useColor(FALSE)
+#' message(rch$colorize("This is no longer blue", color="blue"))
 #' 
 #' @import crayon
 #' 
@@ -55,7 +64,7 @@ RefClassHelper$methods(
         "A static list of brief descriptions for each field in this object"
         if (help) return( CatMisc::methodHelp(match.call(), class(.self) ) )
         list(
-            "useCol"   = "Flag indicating if messages should be colorized",
+            "useCol"   = "Controls message colorization, set with $useColor()",
             "varName"  = "Extracted variable name associated with this object",
             "varCheck" = "Datestamp, last attempt to extract varName")
     },
@@ -81,11 +90,11 @@ RefClassHelper$methods(
             colorize(strwrap("This is the stub report for the `RefClassHelper` class. The maintainer of the 'parent' class should add a more informative $show() method.", 'yellow')))
         var <- .self$.selfVarName()
         msg <- c(msg, colorize(paste0("# ", cName," Object"), "magenta"),
-                 paste0(colorize("  Colorize: ", "blue"), useColor()),
-                 paste0(colorize("  Variable: ", "blue"), var),
-                 paste0("# ",colorize(sprintf("%s$help()", var), "red"),
-                        " for additional information"))
-        cat(msg, fill=TRUE)
+                 paste0("\n  ", colorize("Colorize: ", "blue"), useColor()),
+                 paste0("\n  ", colorize("Variable: ", "blue"), var),
+                 paste0("\n# ",colorize(sprintf("%s$help()", var), "red"),
+                        " for additional information\n"))
+        cat(msg, fill=FALSE)
     },
 
     ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## 
@@ -138,7 +147,8 @@ RefClassHelper$methods(
         if (help) return( CatMisc::methodHelp(match.call(), class(.self) ) )
         fields <- getFieldDescriptions()
         if (length(fields) == 0) return(FALSE)
-        hfmt <- paste0(" help('%s', '%s') # More information on field ")
+        hfmt <- paste0(" help('%s', '%s')")
+        fldClass <- "rchField"
         for (fld in names(fields)) {
             if (is.null(.self[[fld]])) next # Can't attribute NULL
             ## The [[ accessor seems to work for fields?
@@ -151,11 +161,16 @@ RefClassHelper$methods(
             hlp  <- help.search(pat, package=pkgs, fields="alias")$matches
             ## Now get the topic from the package 'closest' to this object
             fndPkg <- intersect(pkgs, hlp$Package)
+            hasCls <- class(.self[[fld]])
             attr(.self[[fld]], "Help") <- if (length(fndPkg) == 0) {
                 ## Could not find help
                 "## No help topic found for this field"
             } else {
                 sprintf(hfmt,fld,fndPkg[1])
+            }
+            if (!is.element(fldClass, hasCls)) {
+                ## Class the field for nicer pretty printing
+                class(.self[[fld]]) <- c(hasCls, fldClass)
             }
         }
         TRUE
@@ -211,6 +226,7 @@ whtName, doCol("# Inspect the object structure", comCol))
         ## Add snippets for each method, broken down by section
         for (sec in names(sections)) {
             meths <- sections[[ sec ]]
+            if (sec == "SKIPFIELD") next # Field info, not methods
             if (sec == "SKIP") {
                 if (rm.skip) next # By default do not show SKIP methods
                 sec <- "Normally Skipped Methods (rm.skip=TRUE to hide)"
@@ -261,17 +277,18 @@ whtName, doCol("# Inspect the object structure", comCol))
         simFmt <- "%s$%s"      # Simple fields
         fCls   <- .self$.refClassDef@fieldClasses # field structure
         fDesc  <- getFieldDescriptions()
-        ## 'simple' vector types
-        simpVec <- c("logical", "numeric", "double", "character",
-                     "factor", "complex", "POSIXct", "POSIXlt", "POSIXt")
+        ## The `SKIPFIELD` section is used to flag fields that should
+        ## not be shown
+        fskip <- sections$SKIPFIELD; if (is.null(fskip)) fskip <- character()
         for (field in names(fCls)) {
             cls <- fCls[[ field ]]
+            ## Skip fields if requested:
+            if (is.element(field, fskip) && rm.skip) next
             ## Is the field "simple"? We will consider it as such if:
-            ##  1. It is one of the vector types listed above
+            ##  1. It is considered 'atomic'
             ##  2. It is 10 elements or less
             
-            isSimple <- is.element(cls, simpVec) &&
-                length( .self[[ field ]]) <= 10
+            isSimple <- is.atomic(cls) && length( .self[[ field ]]) <= 10
             fmt <- ifelse(isSimple, simFmt, strFmt)
             txt <- c(txt, sprintf(fmt, whtName, doCol(field, "blue")))
             com <- sprintf(" # [%s]", cls)
@@ -875,4 +892,39 @@ colorNameToFunc <- function( ) {
     ## Store the constructed map in our environment and return it
     assign(cmVar, cf, envir=packEnv)
     cf
+}
+
+#' RefClassHelper Field Pretty Printer
+#'
+#' S3 print class for annotated RefClassHelper fields
+#'
+#' @details
+#'
+#' If a RefClassHelper object has annotated its fields with
+#' descriptive metadata (via the $annotateFields() method, which is
+#' generally automatically called by the $help() method), the fields
+#' will be classed to allow this function to run. It just makes the
+#' description and help guidance a little nicer
+#' 
+#' @param x Required, the object to be printed
+#' @param \dots To make the build shut up about
+#'     "S3 generic/method consistency" : https://stackoverflow.com/a/14237332
+#'
+#' @export
+
+print.rchField <- function(x, ...) {
+    ## Remove the annotated attributes from the object, as well as the class
+    att <- attributes(x)
+    attr(x, 'Description') <- NULL
+    attr(x, 'Help') <- NULL
+    class(x) <- setdiff(class(x), 'rchField')
+    
+    ## Message the annotated information 'at the top'
+    msg <- character()
+    col <- RefClassHelper()$colorize
+    if (!is.null(att$Description)) msg <- paste0("# ", att$Description)
+    if (!is.null(att$Help))  msg <- c(msg, paste0("# For more information on field: ", col(att$Help, "red")))
+    if (length(msg) != 0) base::message(col(paste(msg,collapse="\n"), "yellow"))
+    ## Finally print the basic field information:
+    print(x)
 }

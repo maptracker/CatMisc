@@ -45,7 +45,7 @@ test_that("Create toy RefClass Object", {
     fdExp <- list(
         "x"        = "A value stored by the Thing",
         "txt"      = "A string stored by the Stuff",
-        "useCol"   = "Flag indicating if messages should be colorized",
+        "useCol"   = "Controls message colorization, set with $useColor()",
         "varName"  = "Extracted variable name associated with this object",
         "varCheck" = "Datestamp, last attempt to extract varName")
     expect_identical(fd, fdExp,
