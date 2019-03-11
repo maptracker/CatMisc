@@ -190,6 +190,9 @@ is.something <- function(x, unclass=FALSE) {
     } else if (length(x) > 1) {
         ## More than one thing? Always true
         TRUE
+    } else if (is.na(x)) {
+        ## To address any classed NAs that sneak by is.def
+        FALSE
     } else if (is.numeric(x)) {
         ## Single number, 0 = false
         if (x == 0) { FALSE } else { TRUE }
