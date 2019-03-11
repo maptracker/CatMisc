@@ -39,7 +39,7 @@ should be used in messaging}
 \item{\code{getHelpSections(help = FALSE)}}{Recursively process an object's helpSections() return value}
 
 \item{\code{help(genericName = "myObject", color = NULL, generic = FALSE,
-  help = FALSE)}}{Construct text for the help() method}
+  rm.skip = TRUE, help = FALSE)}}{Construct text for the help() method}
 
 \item{\code{helpSections(help = FALSE)}}{Static list organizing object methods into conceptual sections}
 
@@ -48,3 +48,13 @@ should be used in messaging}
 \item{\code{useColor(newval = NULL, help = FALSE)}}{Get or set the flag determining if messages are colorized}
 }}
 
+\examples{
+
+rch <- RefClassHelper()
+rch        # Summary text
+rch$help() # Detailed help text
+message(rch$colorize("This is blue", color="blue"))
+rch$useColor(FALSE)
+message(rch$colorize("This is no longer blue", color="blue"))
+
+}

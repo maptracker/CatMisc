@@ -36,7 +36,11 @@ test_that("Relative Path", {
                      "empty parent should yield NA")
 
     ## Preventing normalization of child paths
-    d  <- tempdir()
+    
+    ## Make sure to normalize the path of the temporary directory - on
+    ## Macs R tempdirs will themselves transit through a symlink
+    ## (/var -> /private/var)
+    d  <- normalizePath(tempdir())
     fn <- "realFile.txt"
     f  <- file.path(d, fn)
     cat("Hello World", file=f)

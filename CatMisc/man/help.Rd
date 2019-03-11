@@ -21,7 +21,7 @@ other actions.}
 NULL, invisibly
 }
 \description{
-Summarize object methods and fields, and commands to get additional help
+Summarize object methods, fields and commands to get additional help
 }
 \details{
 \preformatted{
