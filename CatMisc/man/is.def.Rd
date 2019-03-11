@@ -4,10 +4,13 @@
 \alias{is.def}
 \title{Is Defined}
 \usage{
-is.def(x)
+is.def(x, unclass = FALSE)
 }
 \arguments{
 \item{x}{The object to be tested}
+
+\item{unclass}{Default \code{FALSE}. If true, then the query will
+be \code{unclass}ed before inspection}
 }
 \value{
 TRUE if "defined", otherwise FALSE. The following objects

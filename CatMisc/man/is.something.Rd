@@ -4,10 +4,13 @@
 \alias{is.something}
 \title{Is Something}
 \usage{
-is.something(x)
+is.something(x, unclass = FALSE)
 }
 \arguments{
 \item{x}{The object to be tested}
+
+\item{unclass}{Default \code{FALSE}. If true, then the query will
+be \code{unclass}ed before inspection}
 }
 \value{
 TRUE if x is "defined" (\link{is.def}) and is neither

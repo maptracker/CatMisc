@@ -98,6 +98,8 @@ is.empty.field <- function(x, zero.length.empty=FALSE) {
 #' the passed object to be "a single thing".
 #'
 #' @param x The object to be tested
+#' @param unclass Default \code{FALSE}. If true, then the query will
+#'     be \code{unclass}ed before inspection
 #' 
 #' @return TRUE if "defined", otherwise FALSE. The following objects
 #'     are considered "not defined":
@@ -130,11 +132,13 @@ is.empty.field <- function(x, zero.length.empty=FALSE) {
 #' @export
 
 ## Return TRUE for defined objects:
-is.def <- function(x) {
+is.def <- function(x, unclass=FALSE) {
+    if (unclass) x <- unclass(x)
     if (is.null(x) || is.empty.field(x)) {
         FALSE
     } else if (is.object(x) || is.function(x)) {
         ## Objects and functions are always defined
+        ## NOTE: Setting the class attribute on a thing will make it an object!
         TRUE
     } else if (is.matrix(x) && (nrow(x) != 0 || ncol(x) != 0)) {
         ## As long as a matrix has some rows or columns it is
@@ -162,7 +166,9 @@ is.def <- function(x) {
 #' user-supplied arguments
 #'
 #' @param x The object to be tested
-#'
+#' @param unclass Default \code{FALSE}. If true, then the query will
+#'     be \code{unclass}ed before inspection
+#' 
 #' @return TRUE if x is "defined" (\link{is.def}) and is neither
 #'     (numeric) zero nor an empty string.
 #'
@@ -174,10 +180,13 @@ is.def <- function(x) {
 #'
 #' @export
 
-is.something <- function(x) {
+is.something <- function(x, unclass=FALSE) {
+    if (unclass) x <- unclass(x)    
     if (!is.def(x) || length(x) == 0) {
         ## Not defined or length zero? false
         FALSE
+    } else if (is.object(x) || is.function(x)) {
+        TRUE
     } else if (length(x) > 1) {
         ## More than one thing? Always true
         TRUE
