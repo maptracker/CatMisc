@@ -432,7 +432,7 @@ file.rename2 <- function (from, to) {
             ## emitting a warning. Trust it worked, but also pass on
             ## the warning to the user:
             warning(e)
-        } else if (grepl("Invalid cross.device link", e, ignore.case=TRUE)) {
+        } else if (grepl("cross.device link", e, ignore.case=TRUE)) {
             ## This is the situation we wrote the method for. If that
             ## message ever changes we'll miss catching it here.
 
